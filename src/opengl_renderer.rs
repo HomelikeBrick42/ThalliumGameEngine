@@ -104,13 +104,17 @@ impl OpenGLRenderer {
 
         let opengl_context =
             wglCreateContextAttribsARB(device_context, HGLRC::default(), attribs.as_ptr());
-        if temp_opengl_context == HGLRC::default() {
+        if opengl_context == HGLRC::default() {
             panic!("Failed to create opengl context current");
         }
 
-        if unsafe { wglMakeCurrent(device_context, temp_opengl_context) } == false {
+        if unsafe { wglMakeCurrent(device_context, opengl_context) } == false {
             panic!("Failed to bind opengl context");
         }
+
+        if unsafe { wglDeleteContext(temp_opengl_context) } == false {
+            panic!("Failed to destroy temp opengl context");
+        };
 
         gl::load_with(|s| unsafe {
             let cstr = CString::new(s).unwrap();
