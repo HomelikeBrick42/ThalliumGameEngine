@@ -5,6 +5,8 @@ edition = "2021"
 
 [dependencies]
 widestring = "1.0.2"
+lazy_static = "1.4.0"
+gl = "0.14.0"
 
 [dependencies.windows]
 version = "0.43.0"
@@ -13,4 +15,5 @@ features = [
     "Win32_Graphics_Gdi",
     "Win32_System_LibraryLoader",
     "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_OpenGL",
 ]

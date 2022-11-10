@@ -141,7 +141,11 @@ impl Window {
                         TranslateMessage(&message);
                         DispatchMessageW(&message);
                     }
-                    Some(std::mem::take(&mut self.window.events).into_iter())
+                    if self.window.events.len() > 0 {
+                        Some(std::mem::take(&mut self.window.events).into_iter())
+                    } else {
+                        None
+                    }
                 }
             }
         }
