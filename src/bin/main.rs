@@ -11,6 +11,7 @@ fn main() {
                 WindowEvent::Resize(width, height) => println!("Resize: {width}, {height}"),
             }
         }
+
         renderer.clear(Vector3 {
             x: 1.0,
             y: 0.0,

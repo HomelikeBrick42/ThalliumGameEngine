@@ -124,33 +124,15 @@ impl Window {
         (self.width, self.height)
     }
 
-    pub fn events<'a>(&'a mut self) -> impl Iterator<Item = WindowEvent> + 'a {
-        struct EventIterator<'a> {
-            pub window: &'a mut Window,
-        }
-
-        impl<'a> Iterator for EventIterator<'a> {
-            type Item = std::vec::IntoIter<WindowEvent>;
-
-            fn next(&mut self) -> Option<Self::Item> {
-                unsafe {
-                    let mut message = MSG::default();
-                    while PeekMessageW(&mut message, self.window.window_handle, 0, 0, PM_REMOVE)
-                        != false
-                    {
-                        TranslateMessage(&message);
-                        DispatchMessageW(&message);
-                    }
-                    if self.window.events.len() > 0 {
-                        Some(std::mem::take(&mut self.window.events).into_iter())
-                    } else {
-                        None
-                    }
-                }
+    pub fn events(&mut self) -> impl Iterator<Item = WindowEvent> {
+        unsafe {
+            let mut message = MSG::default();
+            while PeekMessageW(&mut message, self.window_handle, 0, 0, PM_REMOVE) != false {
+                TranslateMessage(&message);
+                DispatchMessageW(&message);
             }
+            std::mem::take(&mut self.events).into_iter()
         }
-
-        EventIterator { window: self }.flatten()
     }
 
     pub fn into_renderer(self: Pin<Box<Window>>, api: RendererAPI) -> Box<dyn Renderer> {
