@@ -96,7 +96,7 @@ impl OpenGLRenderer {
 
         let attribs = [
             0x2091, 4, // WGL_CONTEXT_MAJOR_VERSION_ARB
-            0x2092, 4, // WGL_CONTEXT_MAJOR_VERSION_ARB
+            0x2092, 4, // WGL_CONTEXT_MINOR_VERSION_ARB
             0x9126, 1, // WGL_CONTEXT_PROFILE_MASK_ARB WGL_CONTEXT_CORE_PROFILE_BIT_ARB
             0x2094, 1, // WGL_CONTEXT_FLAGS_ARB WGL_CONTEXT_DEBUG_BIT_ARB
             0,
