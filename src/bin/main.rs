@@ -12,11 +12,7 @@ fn main() {
             }
         }
 
-        renderer.clear(Vector3 {
-            x: 1.0,
-            y: 0.0,
-            z: 0.0,
-        });
+        renderer.clear((0.2, 0.4, 0.8).into());
         renderer.present();
     }
     renderer.get_window_mut().hide();
