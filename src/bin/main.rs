@@ -1,16 +1,16 @@
 use game_engine::*;
 
 fn main() {
-    let mut window = Window::new(640, 480, "Test");
+    let mut renderer = Window::new(640, 480, "Test").into_renderer(RendererAPI::OpenGL);
 
-    window.show();
+    renderer.get_window_mut().show();
     'main_loop: loop {
-        for event in window.events() {
+        for event in renderer.get_window_mut().events() {
             match event {
                 WindowEvent::Close => break 'main_loop,
                 WindowEvent::Resize(width, height) => println!("Resize: {width}, {height}"),
             }
         }
     }
-    window.hide();
+    renderer.get_window_mut().hide();
 }

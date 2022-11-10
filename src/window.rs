@@ -21,6 +21,8 @@ use windows::{
     },
 };
 
+use crate::{new_renderer, Renderer, RendererAPI};
+
 pub enum WindowEvent {
     Close,
     Resize(usize, usize),
@@ -31,7 +33,7 @@ pub struct Window {
     window_class_name: U16CString,
     width: usize,
     height: usize,
-    window_handle: HWND,
+    pub(crate) window_handle: HWND,
     events: Vec<WindowEvent>,
 }
 
@@ -145,6 +147,10 @@ impl Window {
         }
 
         EventIterator { window: self }.flatten()
+    }
+
+    pub fn into_renderer(self: Pin<Box<Window>>, api: RendererAPI) -> Box<dyn Renderer> {
+        new_renderer(self, api)
     }
 }
 
