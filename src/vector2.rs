@@ -197,6 +197,18 @@ where
     }
 }
 
+impl<T> From<(T, T)> for Vector2<T> {
+    fn from((x, y): (T, T)) -> Self {
+        Vector2 { x, y }
+    }
+}
+
+impl<T> Into<(T, T)> for Vector2<T> {
+    fn into(self) -> (T, T) {
+        (self.x, self.y)
+    }
+}
+
 impl<T, U> PartialEq<Vector2<U>> for Vector2<T>
 where
     T: PartialEq<U>,

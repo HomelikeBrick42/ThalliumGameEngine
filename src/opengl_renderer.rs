@@ -24,7 +24,7 @@ use windows::{
     },
 };
 
-use crate::{Renderer, Window};
+use crate::{Renderer, Vector2, Window};
 
 pub(crate) struct OpenGLRenderer {
     window: Option<Pin<Box<Window>>>,
@@ -161,15 +161,19 @@ impl Renderer for OpenGLRenderer {
         self.window.take().unwrap()
     }
 
+    fn resize(&mut self, size: Vector2<usize>) {
+        unsafe { gl::Viewport(0, 0, size.x as _, size.y as _) }
+    }
+
+    fn present(&mut self) {
+        unsafe { SwapBuffers(self.device_context) };
+    }
+
     fn clear(&mut self, color: crate::Vector3<f32>) {
         unsafe {
             gl::ClearColor(color.x, color.y, color.z, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
         }
-    }
-
-    fn present(&mut self) {
-        unsafe { SwapBuffers(self.device_context) };
     }
 }
 

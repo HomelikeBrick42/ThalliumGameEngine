@@ -21,11 +21,11 @@ use windows::{
     },
 };
 
-use crate::{new_renderer, Renderer, RendererAPI};
+use crate::{new_renderer, Renderer, RendererAPI, Vector2};
 
 pub enum WindowEvent {
     Close,
-    Resize(usize, usize),
+    Resize(Vector2<usize>),
 }
 
 pub struct Window {
@@ -120,8 +120,8 @@ impl Window {
         unsafe { ShowWindow(self.window_handle, SW_HIDE) };
     }
 
-    pub fn get_size(&self) -> (usize, usize) {
-        (self.width, self.height)
+    pub fn get_size(&self) -> Vector2<usize> {
+        (self.width, self.height).into()
     }
 
     pub fn events(&mut self) -> impl Iterator<Item = WindowEvent> {
@@ -188,7 +188,7 @@ unsafe extern "system" fn window_message_callback(
                 window.height = height as usize;
                 window
                     .events
-                    .push(WindowEvent::Resize(window.width, window.height));
+                    .push(WindowEvent::Resize((window.width, window.height).into()));
             }
         }
         _ => result = DefWindowProcW(hwnd, message, w_param, l_param),

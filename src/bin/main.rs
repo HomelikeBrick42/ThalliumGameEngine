@@ -8,7 +8,7 @@ fn main() {
         for event in renderer.get_window_mut().events() {
             match event {
                 WindowEvent::Close => break 'main_loop,
-                WindowEvent::Resize(width, height) => println!("Resize: {width}, {height}"),
+                WindowEvent::Resize(size) => renderer.resize(size),
             }
         }
 
