@@ -1,50 +1,14 @@
 use std::{mem::size_of, mem::size_of_val};
 
 use game_engine::*;
-use gl::types::{GLenum, GLuint};
 
 fn main() {
     let mut renderer = Window::new((640, 480).into(), "Test").into_renderer(RendererAPI::OpenGL);
 
-    unsafe {
-        unsafe fn compile_shader(typ: GLenum, source: &str) -> GLuint {
-            let shader = gl::CreateShader(typ);
-            let ptr = source.as_ptr();
-            let length = source.len() as i32;
-            gl::ShaderSource(shader, 1, &ptr as *const _ as _, &length);
-            gl::CompileShader(shader);
-            shader
-        }
-
-        let vertex_shader = compile_shader(
-            gl::VERTEX_SHADER,
-            r##"#version 440 core
-
-layout(location = 0) in vec4 a_Position;
-
-void main() {
-    gl_Position = a_Position;
-}
-"##,
-        );
-        let fragment_shader = compile_shader(
-            gl::FRAGMENT_SHADER,
-            r##"#version 400 core
-
-layout(location = 0) out vec4 o_Color;
-
-void main() {
-    o_Color = vec4(1.0);
-}
-"##,
-        );
-
-        let shader = gl::CreateProgram();
-        gl::AttachShader(shader, vertex_shader);
-        gl::AttachShader(shader, fragment_shader);
-        gl::LinkProgram(shader);
-        gl::UseProgram(shader);
-    }
+    let _shader = renderer.create_shader(
+        include_str!("./basic.vert.glsl"),
+        include_str!("./basic.frag.glsl"),
+    );
 
     unsafe {
         let mut vertex_array = 0;
@@ -63,7 +27,7 @@ void main() {
             vertices.as_ptr().cast(),
             gl::STATIC_DRAW,
         );
-    };
+    }
 
     unsafe {
         gl::EnableVertexAttribArray(0);

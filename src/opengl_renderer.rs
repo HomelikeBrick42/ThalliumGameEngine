@@ -1,5 +1,7 @@
 use std::{
+    collections::HashMap,
     ffi::{c_void, CString},
+    marker::PhantomData,
     mem::size_of,
     pin::Pin,
     sync::atomic::AtomicBool,
@@ -24,13 +26,19 @@ use windows::{
     },
 };
 
-use crate::{Renderer, Vector2, Window};
+use crate::{
+    opengl_shader::OpenGLShader, PhantomUnsend, PhantomUnsync, Renderer, Shader, ShaderID, Vector2,
+    Window,
+};
 
 pub(crate) struct OpenGLRenderer {
     window: Option<Pin<Box<Window>>>,
     opengl_library: HINSTANCE,
     device_context: HDC,
     opengl_context: HGLRC,
+    shaders: HashMap<ShaderID, OpenGLShader>,
+    _send: PhantomUnsend,
+    _sync: PhantomUnsync,
 }
 
 lazy_static! {
@@ -114,7 +122,7 @@ impl OpenGLRenderer {
 
         if unsafe { wglDeleteContext(temp_opengl_context) } == false {
             panic!("Failed to destroy temp opengl context");
-        };
+        }
 
         gl::load_with(|s| unsafe {
             let cstr = CString::new(s).unwrap();
@@ -132,6 +140,9 @@ impl OpenGLRenderer {
             opengl_library,
             device_context,
             opengl_context,
+            shaders: HashMap::new(),
+            _send: PhantomData,
+            _sync: PhantomData,
         }
     }
 
@@ -163,6 +174,29 @@ impl Renderer for OpenGLRenderer {
     fn take_window(mut self) -> Pin<Box<Window>> {
         self.destroy();
         self.window.take().unwrap()
+    }
+
+    fn create_shader(
+        &mut self,
+        vertex_shader_source: &str,
+        fragment_shader_source: &str,
+    ) -> ShaderID {
+        let shader = OpenGLShader::new(vertex_shader_source, fragment_shader_source);
+        let id = shader.get_id();
+        assert!(self.shaders.insert(id, shader).is_none());
+        id
+    }
+
+    fn destroy_shader(&mut self, id: ShaderID) {
+        assert!(self.shaders.remove(&id).is_some());
+    }
+
+    fn get_shader(&self, id: ShaderID) -> &dyn Shader {
+        self.shaders.get(&id).unwrap()
+    }
+
+    fn get_shader_mut(&mut self, id: ShaderID) -> &mut dyn Shader {
+        self.shaders.get_mut(&id).unwrap()
     }
 
     fn resize(&mut self, size: Vector2<usize>) {
