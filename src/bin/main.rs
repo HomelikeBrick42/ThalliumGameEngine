@@ -1,7 +1,7 @@
 use game_engine::*;
 
 fn main() {
-    let mut renderer = Window::new(640, 480, "Test").into_renderer(RendererAPI::OpenGL);
+    let mut renderer = Window::new((640, 480).into(), "Test").into_renderer(RendererAPI::OpenGL);
 
     renderer.get_window_mut().show();
     'main_loop: loop {

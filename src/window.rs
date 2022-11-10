@@ -31,14 +31,13 @@ pub enum WindowEvent {
 pub struct Window {
     instance: HINSTANCE,
     window_class_name: U16CString,
-    width: usize,
-    height: usize,
+    size: Vector2<usize>,
     pub(crate) window_handle: HWND,
     events: Vec<WindowEvent>,
 }
 
 impl Window {
-    pub fn new(width: usize, height: usize, title: &str) -> Pin<Box<Window>> {
+    pub fn new(size: Vector2<usize>, title: &str) -> Pin<Box<Window>> {
         let instance = unsafe { GetModuleHandleW(PCWSTR::null()) }.unwrap();
 
         let window_class_name = {
@@ -70,9 +69,9 @@ impl Window {
 
         let mut rect = RECT::default();
         rect.left = 100;
-        rect.right = rect.left + width as i32;
+        rect.right = rect.left + size.x as i32;
         rect.top = 100;
-        rect.bottom = rect.top + height as i32;
+        rect.bottom = rect.top + size.y as i32;
         if unsafe { AdjustWindowRectEx(&mut rect, window_style, false, window_style_ex) } == false {
             panic!("Failed to calculate window bounds");
         }
@@ -83,8 +82,7 @@ impl Window {
         let mut window = Pin::new(Box::new(Window {
             instance,
             window_class_name,
-            width,
-            height,
+            size,
             window_handle: HWND::default(),
             events: vec![],
         }));
@@ -98,8 +96,8 @@ impl Window {
                 window_style,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
-                window.width as _,
-                window.height as _,
+                width as _,
+                height as _,
                 HWND::default(),
                 HMENU::default(),
                 window.instance,
@@ -121,7 +119,7 @@ impl Window {
     }
 
     pub fn get_size(&self) -> Vector2<usize> {
-        (self.width, self.height).into()
+        self.size
     }
 
     pub fn events(&mut self) -> impl Iterator<Item = WindowEvent> {
@@ -184,11 +182,8 @@ unsafe extern "system" fn window_message_callback(
             let width = rect.right - rect.left;
             let height = rect.bottom - rect.top;
             if width > 0 && height > 0 {
-                window.width = width as usize;
-                window.height = height as usize;
-                window
-                    .events
-                    .push(WindowEvent::Resize((window.width, window.height).into()));
+                window.size = (width as _, height as _).into();
+                window.events.push(WindowEvent::Resize(window.size));
             }
         }
         _ => result = DefWindowProcW(hwnd, message, w_param, l_param),
