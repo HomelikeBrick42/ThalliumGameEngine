@@ -27,8 +27,9 @@ use windows::{
 };
 
 use crate::{
-    opengl_shader::OpenGLShader, PhantomUnsend, PhantomUnsync, Renderer, Shader, ShaderID, Vector2,
-    Window,
+    opengl_shader::OpenGLShader, opengl_vertex_buffer::OpenGLVertexBuffer, PhantomUnsend,
+    PhantomUnsync, Renderer, Shader, ShaderID, Vector2, VertexBuffer, VertexBufferElement,
+    VertexBufferID, Window,
 };
 
 pub(crate) struct OpenGLRenderer {
@@ -37,6 +38,7 @@ pub(crate) struct OpenGLRenderer {
     device_context: HDC,
     opengl_context: HGLRC,
     shaders: HashMap<ShaderID, OpenGLShader>,
+    vertex_buffers: HashMap<VertexBufferID, OpenGLVertexBuffer>,
     _send: PhantomUnsend,
     _sync: PhantomUnsync,
 }
@@ -141,6 +143,7 @@ impl OpenGLRenderer {
             device_context,
             opengl_context,
             shaders: HashMap::new(),
+            vertex_buffers: HashMap::new(),
             _send: PhantomData,
             _sync: PhantomData,
         }
@@ -159,6 +162,14 @@ impl OpenGLRenderer {
         }
 
         CONTEXT_CREATED.store(false, std::sync::atomic::Ordering::Release);
+    }
+}
+
+impl Drop for OpenGLRenderer {
+    fn drop(&mut self) {
+        if self.window.is_some() {
+            self.destroy();
+        }
     }
 }
 
@@ -188,19 +199,60 @@ impl Renderer for OpenGLRenderer {
     }
 
     fn destroy_shader(&mut self, id: ShaderID) {
-        assert!(self.shaders.remove(&id).is_some());
+        self.shaders.remove(&id);
     }
 
-    fn get_shader(&self, id: ShaderID) -> &dyn Shader {
-        self.shaders.get(&id).unwrap()
+    fn get_shader(&self, id: ShaderID) -> Option<&dyn Shader> {
+        self.shaders.get(&id).map(|shader| shader as &dyn Shader)
     }
 
-    fn get_shader_mut(&mut self, id: ShaderID) -> &mut dyn Shader {
-        self.shaders.get_mut(&id).unwrap()
+    fn get_shader_mut(&mut self, id: ShaderID) -> Option<&mut dyn Shader> {
+        self.shaders
+            .get_mut(&id)
+            .map(|shader| shader as &mut dyn Shader)
+    }
+
+    fn create_vertex_buffer(
+        &mut self,
+        vertex_layout: &[VertexBufferElement],
+        data: Option<&[u8]>,
+    ) -> VertexBufferID {
+        let vertex_buffer = OpenGLVertexBuffer::new(vertex_layout, data);
+        let id = vertex_buffer.get_id();
+        assert!(self.vertex_buffers.insert(id, vertex_buffer).is_none());
+        id
+    }
+
+    fn destroy_vertex_buffer(&mut self, id: VertexBufferID) {
+        self.vertex_buffers.remove(&id);
+    }
+
+    fn get_vertex_buffer(&self, id: VertexBufferID) -> Option<&dyn VertexBuffer> {
+        self.vertex_buffers
+            .get(&id)
+            .map(|vertex_buffer| vertex_buffer as &dyn VertexBuffer)
+    }
+
+    fn get_vertex_buffer_mut(&mut self, id: VertexBufferID) -> Option<&mut dyn VertexBuffer> {
+        self.vertex_buffers
+            .get_mut(&id)
+            .map(|vertex_buffer| vertex_buffer as &mut dyn VertexBuffer)
     }
 
     fn resize(&mut self, size: Vector2<usize>) {
         unsafe { gl::Viewport(0, 0, size.x as _, size.y as _) }
+    }
+
+    fn draw(&mut self, shader: ShaderID, vertex_buffer: VertexBufferID) {
+        // TODO: maybe some proper error handling
+        let Some(shader) = self.shaders.get_mut(&shader) else { return; };
+        let Some(vertex_buffer) = self.vertex_buffers.get_mut(&vertex_buffer) else { return; };
+
+        shader.bind();
+        vertex_buffer.bind();
+        unsafe { gl::DrawArrays(gl::TRIANGLES, 0, vertex_buffer.get_count() as _) };
+        vertex_buffer.unbind();
+        shader.unbind();
     }
 
     fn present(&mut self) {
@@ -211,14 +263,6 @@ impl Renderer for OpenGLRenderer {
         unsafe {
             gl::ClearColor(color.x, color.y, color.z, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
-        }
-    }
-}
-
-impl Drop for OpenGLRenderer {
-    fn drop(&mut self) {
-        if self.window.is_some() {
-            self.destroy();
         }
     }
 }

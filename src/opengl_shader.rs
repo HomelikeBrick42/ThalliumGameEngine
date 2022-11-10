@@ -36,8 +36,6 @@ impl OpenGLShader {
             gl::DeleteShader(vertex_shader);
             gl::DeleteShader(fragment_shader);
 
-            gl::UseProgram(shader); // TODO: just for testing purposes
-
             OpenGLShader {
                 id: {
                     static ID: AtomicUsize = AtomicUsize::new(1);
@@ -52,6 +50,14 @@ impl OpenGLShader {
                 _sync: PhantomData,
             }
         }
+    }
+
+    pub(crate) fn bind(&mut self) {
+        unsafe { gl::UseProgram(self.opengl_id) }
+    }
+
+    pub(crate) fn unbind(&mut self) {
+        unsafe { gl::UseProgram(0) }
     }
 }
 
