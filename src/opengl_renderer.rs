@@ -215,7 +215,7 @@ impl Renderer for OpenGLRenderer {
     fn create_vertex_buffer(
         &mut self,
         vertex_layout: &[VertexBufferElement],
-        data: Option<&[u8]>,
+        data: &[u8],
     ) -> VertexBufferID {
         let vertex_buffer = OpenGLVertexBuffer::new(vertex_layout, data);
         let id = vertex_buffer.get_id();

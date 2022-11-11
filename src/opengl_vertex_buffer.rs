@@ -14,10 +14,7 @@ pub(crate) struct OpenGLVertexBuffer {
 }
 
 impl OpenGLVertexBuffer {
-    pub(crate) fn new(
-        vertex_layout: &[VertexBufferElement],
-        data: Option<&[u8]>,
-    ) -> OpenGLVertexBuffer {
+    pub(crate) fn new(vertex_layout: &[VertexBufferElement], data: &[u8]) -> OpenGLVertexBuffer {
         unsafe {
             let mut vertex_array = 0;
             gl::GenVertexArrays(1, &mut vertex_array);
@@ -26,14 +23,12 @@ impl OpenGLVertexBuffer {
             let mut vertex_buffer = 0;
             gl::GenBuffers(1, &mut vertex_buffer);
             gl::BindBuffer(gl::ARRAY_BUFFER, vertex_buffer);
-            if let Some(data) = data {
-                gl::BufferData(
-                    gl::ARRAY_BUFFER,
-                    data.len() as _,
-                    data.as_ptr().cast(),
-                    gl::STATIC_DRAW,
-                );
-            }
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                data.len() as _,
+                data.as_ptr().cast(),
+                gl::STATIC_DRAW,
+            );
 
             fn get_element_size(element: &VertexBufferElement) -> usize {
                 match element {
@@ -84,7 +79,7 @@ impl OpenGLVertexBuffer {
                 },
                 opengl_vertex_array_id: vertex_array,
                 opengl_id: vertex_buffer,
-                count: data.map(|data| data.len()).unwrap_or(0) / stride,
+                count: data.len() / stride,
                 _send: PhantomData,
                 _sync: PhantomData,
             }

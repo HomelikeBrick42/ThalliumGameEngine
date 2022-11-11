@@ -11,7 +11,7 @@ fn main() {
     let vertices: &[Vector2<f32>] = &[(0.0, 0.5).into(), (0.5, -0.5).into(), (-0.5, -0.5).into()];
     let vertex_buffer = renderer.create_vertex_buffer(
         &[VertexBufferElement::Float2],
-        Some(slice_to_bytes(vertices)),
+        slice_to_bytes(vertices),
     );
 
     renderer.get_window_mut().show();

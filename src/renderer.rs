@@ -26,7 +26,7 @@ pub trait Renderer {
     fn create_vertex_buffer(
         &mut self,
         vertex_layout: &[VertexBufferElement],
-        data: Option<&[u8]>,
+        data: &[u8],
     ) -> VertexBufferID;
     fn destroy_vertex_buffer(&mut self, id: VertexBufferID);
     fn get_vertex_buffer(&self, id: VertexBufferID) -> Option<&dyn VertexBuffer>;
