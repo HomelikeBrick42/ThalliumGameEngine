@@ -1,15 +1,22 @@
 use std::pin::Pin;
 
 use crate::{
-    math::{Vector2, Vector3},
+    math::{Matrix4x4, Vector2, Vector3},
     renderer::{
         opengl::OpenGLRenderer, Shader, ShaderID, VertexBuffer, VertexBufferElement, VertexBufferID,
     },
+    scene::Camera,
     Window,
 };
 
 pub enum RendererAPI {
     OpenGL,
+}
+
+pub(crate) fn new_renderer(window: Pin<Box<Window>>, api: RendererAPI) -> Box<dyn Renderer> {
+    match api {
+        RendererAPI::OpenGL => Box::new(OpenGLRenderer::new(window)),
+    }
 }
 
 pub trait Renderer {
@@ -39,11 +46,14 @@ pub trait Renderer {
     fn present(&mut self);
 
     fn clear(&mut self, color: Vector3<f32>);
-    fn draw(&mut self, shader: ShaderID, vertex_buffer: VertexBufferID);
+    fn drawing_context<'a>(&'a mut self, camera: Camera<f32>) -> Box<dyn RendererDrawContext + 'a>;
 }
 
-pub(crate) fn new_renderer(window: Pin<Box<Window>>, api: RendererAPI) -> Box<dyn Renderer> {
-    match api {
-        RendererAPI::OpenGL => Box::new(OpenGLRenderer::new(window)),
-    }
+pub trait RendererDrawContext {
+    fn draw(
+        &mut self,
+        shader: ShaderID,
+        vertex_buffer: VertexBufferID,
+        model_matrix: Matrix4x4<f32>,
+    );
 }

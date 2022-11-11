@@ -1,6 +1,4 @@
-use crate::math::{One, Zero};
-
-use super::{Vector3, Vector4};
+use crate::math::{One, Vector3, Vector4, Zero};
 
 pub type Matrix4x4<T> = Matrix<T, 4, 4>;
 

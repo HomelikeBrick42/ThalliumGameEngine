@@ -27,11 +27,12 @@ use windows::{
 };
 
 use crate::{
-    math::{Vector2, Vector3},
+    math::{Matrix4x4, Vector2, Vector3},
     renderer::{
-        opengl::OpenGLShader, opengl::OpenGLVertexBuffer, Renderer, Shader, ShaderID, VertexBuffer,
-        VertexBufferElement, VertexBufferID,
+        opengl::OpenGLShader, opengl::OpenGLVertexBuffer, Renderer, RendererDrawContext, Shader,
+        ShaderID, VertexBuffer, VertexBufferElement, VertexBufferID,
     },
+    scene::Camera,
     PhantomUnsend, PhantomUnsync, Window,
 };
 
@@ -246,18 +247,6 @@ impl Renderer for OpenGLRenderer {
         unsafe { gl::Viewport(0, 0, size.x as _, size.y as _) }
     }
 
-    fn draw(&mut self, shader: ShaderID, vertex_buffer: VertexBufferID) {
-        // TODO: maybe some proper error handling
-        let Some(shader) = self.shaders.get_mut(&shader) else { return; };
-        let Some(vertex_buffer) = self.vertex_buffers.get_mut(&vertex_buffer) else { return; };
-
-        shader.bind();
-        vertex_buffer.bind();
-        unsafe { gl::DrawArrays(gl::TRIANGLES, 0, vertex_buffer.get_count() as _) };
-        vertex_buffer.unbind();
-        shader.unbind();
-    }
-
     fn present(&mut self) {
         unsafe { SwapBuffers(self.device_context) };
     }
@@ -267,5 +256,47 @@ impl Renderer for OpenGLRenderer {
             gl::ClearColor(color.x, color.y, color.z, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
         }
+    }
+
+    fn drawing_context<'a>(&'a mut self, camera: Camera<f32>) -> Box<dyn RendererDrawContext + 'a> {
+        Box::new(OpenGLRendererDrawContext {
+            renderer: self,
+            view_matrix: camera.transform.into(),
+            projection_matrix: camera.projection_type.into(),
+            _send: PhantomData,
+            _sync: PhantomData,
+        })
+    }
+}
+
+pub struct OpenGLRendererDrawContext<'a> {
+    renderer: &'a mut OpenGLRenderer,
+    view_matrix: Matrix4x4<f32>,
+    projection_matrix: Matrix4x4<f32>,
+    _send: PhantomUnsend,
+    _sync: PhantomUnsync,
+}
+
+impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
+    fn draw(
+        &mut self,
+        shader: ShaderID,
+        vertex_buffer: VertexBufferID,
+        model_matrix: crate::math::Matrix4x4<f32>,
+    ) {
+        // TODO: maybe some proper error handling
+        let Some(shader) = self.renderer.shaders.get_mut(&shader) else { return; };
+        let Some(vertex_buffer) = self.renderer.vertex_buffers.get_mut(&vertex_buffer) else { return; };
+
+        shader.bind();
+        vertex_buffer.bind();
+        unsafe {
+            gl::UniformMatrix4fv(0, 1, false as _, &self.projection_matrix[0][0]);
+            gl::UniformMatrix4fv(1, 1, false as _, &self.view_matrix[0][0]);
+            gl::UniformMatrix4fv(2, 1, false as _, &model_matrix[0][0]);
+            gl::DrawArrays(gl::TRIANGLES, 0, vertex_buffer.get_count() as _);
+        }
+        vertex_buffer.unbind();
+        shader.unbind();
     }
 }

@@ -1,6 +1,7 @@
-use crate::math::{Matrix4x4, One, Two, Zero};
-
-use super::Transform;
+use crate::{
+    math::{Matrix4x4, One, Two, Zero},
+    scene::Transform,
+};
 
 pub enum CameraProjectionType<T> {
     Orthographic {
@@ -13,18 +14,18 @@ pub enum CameraProjectionType<T> {
     },
 }
 
-impl<T> CameraProjectionType<T> {
-    pub fn to_matrix(self) -> Matrix4x4<T>
-    where
-        T: Clone
-            + Zero
-            + One
-            + Two
-            + std::ops::Add<T, Output = T>
-            + std::ops::Sub<T, Output = T>
-            + std::ops::Div<T, Output = T>
-            + std::ops::Neg<Output = T>,
-    {
+impl<T> Into<Matrix4x4<T>> for CameraProjectionType<T>
+where
+    T: Clone
+        + Zero
+        + One
+        + Two
+        + std::ops::Add<T, Output = T>
+        + std::ops::Sub<T, Output = T>
+        + std::ops::Div<T, Output = T>
+        + std::ops::Neg<Output = T>,
+{
+    fn into(self) -> Matrix4x4<T> {
         match self {
             CameraProjectionType::Orthographic {
                 left,

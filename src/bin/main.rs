@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use game_engine::{math::*, renderer::*, *};
+use game_engine::{math::*, renderer::*, scene::*, *};
 
 fn main() {
     let mut renderer = Window::new((640, 480).into(), "Test").into_renderer(RendererAPI::OpenGL);
@@ -35,6 +35,18 @@ fn main() {
         slice_to_bytes(vertices),
     );
 
+    let camera = Camera {
+        transform: Transform::default(),
+        projection_type: CameraProjectionType::Orthographic {
+            left: -1.0,
+            right: 1.0,
+            top: 1.0,
+            bottom: -1.0,
+            near: -1.0,
+            far: 1.0,
+        },
+    };
+
     renderer.get_window_mut().show();
     'main_loop: loop {
         for event in renderer.get_window_mut().events() {
@@ -45,7 +57,10 @@ fn main() {
         }
 
         renderer.clear((0.2, 0.4, 0.8).into());
-        renderer.draw(shader, vertex_buffer);
+        {
+            let mut draw_context = renderer.drawing_context(camera);
+            draw_context.draw(shader, vertex_buffer, Matrix::identity());
+        }
         renderer.present();
     }
     renderer.get_window_mut().hide();
