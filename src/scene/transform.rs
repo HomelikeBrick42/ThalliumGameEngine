@@ -26,6 +26,21 @@ where
     }
 }
 
+impl<T> Clone for Transform<T>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            position: self.position.clone(),
+            rotation: self.rotation.clone(),
+            scale: self.scale.clone(),
+        }
+    }
+}
+
+impl<T> Copy for Transform<T> where T: Copy {}
+
 impl<T> Default for Transform<T>
 where
     T: Zero + One,

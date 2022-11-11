@@ -107,6 +107,19 @@ impl<T, const R: usize, const C: usize> std::ops::IndexMut<usize> for Matrix<T, 
     }
 }
 
+impl<T, const R: usize, const C: usize> Clone for Matrix<T, R, C>
+where
+    T: Clone,
+{
+    fn clone(&self) -> Self {
+        Self {
+            elements: self.elements.clone(),
+        }
+    }
+}
+
+impl<T, const R: usize, const C: usize> Copy for Matrix<T, R, C> where T: Copy {}
+
 impl<T, const R: usize, const C: usize> Default for Matrix<T, R, C>
 where
     T: Default,

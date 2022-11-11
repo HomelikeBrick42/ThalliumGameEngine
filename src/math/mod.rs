@@ -113,3 +113,40 @@ impl One for f64 {
         1.0
     }
 }
+
+pub trait Two {
+    fn two() -> Self;
+}
+
+macro_rules! two_integer_like {
+    ($type:ty) => {
+        impl Two for $type {
+            fn two() -> Self {
+                2
+            }
+        }
+    };
+}
+
+two_integer_like!(u8);
+two_integer_like!(u16);
+two_integer_like!(u32);
+two_integer_like!(u64);
+two_integer_like!(usize);
+two_integer_like!(i8);
+two_integer_like!(i16);
+two_integer_like!(i32);
+two_integer_like!(i64);
+two_integer_like!(isize);
+
+impl Two for f32 {
+    fn two() -> Self {
+        2.0
+    }
+}
+
+impl Two for f64 {
+    fn two() -> Self {
+        2.0
+    }
+}

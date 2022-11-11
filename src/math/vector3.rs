@@ -1,4 +1,4 @@
-use crate::math::{One, Recip, Sqrt, Zero};
+use crate::math::{One, Recip, Sqrt, Two, Zero};
 
 pub struct Vector3<T> {
     pub x: T,
@@ -44,9 +44,9 @@ impl<T> Vector3<T> {
     pub fn reflect(self, normal: Self) -> Self
     where
         Self: std::ops::Sub<Self, Output = Self>,
-        T: std::ops::Add<T, Output = T> + std::ops::Mul<T, Output = T> + Clone + From<u8>,
+        T: Two + std::ops::Add<T, Output = T> + std::ops::Mul<T, Output = T> + Clone,
     {
-        self.clone() - Vector3::from(T::from(2) * self.dot(normal.clone())) * normal
+        self.clone() - Vector3::from(T::two() * self.dot(normal.clone())) * normal
     }
 
     pub fn cross(self, other: Self) -> Self
@@ -215,6 +215,19 @@ where
             x: T::one(),
             y: T::one(),
             z: T::one(),
+        }
+    }
+}
+
+impl<T> Two for Vector3<T>
+where
+    T: Two,
+{
+    fn two() -> Self {
+        Self {
+            x: T::two(),
+            y: T::two(),
+            z: T::two(),
         }
     }
 }
