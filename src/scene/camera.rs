@@ -4,6 +4,7 @@ use crate::{
 };
 
 pub enum CameraProjectionType<T> {
+    None,
     Orthographic {
         left: T,
         right: T,
@@ -27,6 +28,7 @@ where
 {
     fn into(self) -> Matrix4x4<T> {
         match self {
+            CameraProjectionType::None => Matrix4x4::identity(),
             CameraProjectionType::Orthographic {
                 left,
                 right,
@@ -70,6 +72,7 @@ where
 {
     fn clone(&self) -> Self {
         match self {
+            Self::None => Self::None,
             Self::Orthographic {
                 left,
                 right,
@@ -91,6 +94,12 @@ where
 
 impl<T> Copy for CameraProjectionType<T> where T: Copy {}
 
+impl<T> Default for CameraProjectionType<T> {
+    fn default() -> Self {
+        CameraProjectionType::None
+    }
+}
+
 pub struct Camera<T> {
     pub transform: Transform<T>,
     pub projection_type: CameraProjectionType<T>,
@@ -109,3 +118,15 @@ where
 }
 
 impl<T> Copy for Camera<T> where T: Copy {}
+
+impl<T> Default for Camera<T>
+where
+    T: Zero + One,
+{
+    fn default() -> Self {
+        Self {
+            transform: Default::default(),
+            projection_type: Default::default(),
+        }
+    }
+}
