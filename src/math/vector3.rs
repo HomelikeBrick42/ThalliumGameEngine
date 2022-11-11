@@ -1,4 +1,4 @@
-use crate::{Recip, Sqrt};
+use crate::math::{Recip, Sqrt};
 
 pub struct Vector3<T> {
     pub x: T,

@@ -2,7 +2,10 @@ use std::{marker::PhantomData, mem::size_of, sync::atomic::AtomicUsize};
 
 use gl::types::GLuint;
 
-use crate::{PhantomUnsend, PhantomUnsync, VertexBuffer, VertexBufferElement, VertexBufferID};
+use crate::{
+    renderer::{VertexBuffer, VertexBufferElement, VertexBufferID},
+    PhantomUnsend, PhantomUnsync,
+};
 
 pub(crate) struct OpenGLVertexBuffer {
     id: VertexBufferID,

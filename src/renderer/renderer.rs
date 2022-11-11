@@ -1,8 +1,11 @@
 use std::pin::Pin;
 
 use crate::{
-    opengl_renderer::OpenGLRenderer, Shader, ShaderID, Vector2, Vector3, VertexBuffer,
-    VertexBufferElement, VertexBufferID, Window,
+    math::{Vector2, Vector3},
+    renderer::{
+        opengl::OpenGLRenderer, Shader, ShaderID, VertexBuffer, VertexBufferElement, VertexBufferID,
+    },
+    Window,
 };
 
 pub enum RendererAPI {

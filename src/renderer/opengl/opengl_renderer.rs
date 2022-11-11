@@ -27,9 +27,12 @@ use windows::{
 };
 
 use crate::{
-    opengl_shader::OpenGLShader, opengl_vertex_buffer::OpenGLVertexBuffer, PhantomUnsend,
-    PhantomUnsync, Renderer, Shader, ShaderID, Vector2, VertexBuffer, VertexBufferElement,
-    VertexBufferID, Window,
+    math::{Vector2, Vector3},
+    renderer::{
+        opengl::OpenGLShader, opengl::OpenGLVertexBuffer, Renderer, Shader, ShaderID, VertexBuffer,
+        VertexBufferElement, VertexBufferID,
+    },
+    PhantomUnsend, PhantomUnsync, Window,
 };
 
 pub(crate) struct OpenGLRenderer {
@@ -259,7 +262,7 @@ impl Renderer for OpenGLRenderer {
         unsafe { SwapBuffers(self.device_context) };
     }
 
-    fn clear(&mut self, color: crate::Vector3<f32>) {
+    fn clear(&mut self, color: Vector3<f32>) {
         unsafe {
             gl::ClearColor(color.x, color.y, color.z, 1.0);
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);

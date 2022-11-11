@@ -1,3 +1,9 @@
+mod vector2;
+mod vector3;
+
+pub use vector2::*;
+pub use vector3::*;
+
 pub trait Sqrt {
     fn sqrt(self) -> Self;
 }

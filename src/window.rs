@@ -21,7 +21,10 @@ use windows::{
     },
 };
 
-use crate::{new_renderer, Renderer, RendererAPI, Vector2};
+use crate::{
+    math::Vector2,
+    renderer::{new_renderer, Renderer, RendererAPI},
+};
 
 pub enum WindowEvent {
     Close,

@@ -2,7 +2,10 @@ use std::{marker::PhantomData, sync::atomic::AtomicUsize};
 
 use gl::types::{GLenum, GLuint};
 
-use crate::{PhantomUnsend, PhantomUnsync, Shader, ShaderID};
+use crate::{
+    renderer::{Shader, ShaderID},
+    PhantomUnsend, PhantomUnsync,
+};
 
 pub(crate) struct OpenGLShader {
     id: ShaderID,

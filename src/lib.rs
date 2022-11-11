@@ -1,20 +1,8 @@
-mod math;
-mod opengl_renderer;
-mod opengl_shader;
-mod opengl_vertex_buffer;
-mod renderer;
-mod shader;
-mod vector2;
-mod vector3;
-mod vertex_buffer;
+pub mod math;
+pub mod renderer;
+
 mod window;
 
-pub use math::*;
-pub use renderer::*;
-pub use shader::*;
-pub use vector2::*;
-pub use vector3::*;
-pub use vertex_buffer::*;
 pub use window::*;
 
 pub type PhantomUnsync = std::marker::PhantomData<std::cell::Cell<()>>;
