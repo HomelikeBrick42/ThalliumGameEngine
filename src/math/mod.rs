@@ -88,6 +88,22 @@ impl Cos for f64 {
     }
 }
 
+pub trait Tan {
+    fn tan(self) -> Self;
+}
+
+impl Tan for f32 {
+    fn tan(self) -> Self {
+        self.tan()
+    }
+}
+
+impl Tan for f64 {
+    fn tan(self) -> Self {
+        self.tan()
+    }
+}
+
 pub trait Recip {
     fn recip(self) -> Self;
 }

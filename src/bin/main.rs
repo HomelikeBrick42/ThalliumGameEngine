@@ -40,16 +40,14 @@ fn main() {
 
     let mut camera = Camera {
         transform: Transform::default(),
-        projection_type: {
-            let (width, height) = renderer.get_window().get_size().into();
-            CameraProjectionType::Orthographic {
-                left: -(width as f32 / height as f32),
-                right: (width as f32 / height as f32),
-                top: 1.0,
-                bottom: -1.0,
-                near: -1.0,
-                far: 1.0,
-            }
+        projection_type: CameraProjectionType::Perspective {
+            fov: 60.0,
+            aspect: {
+                let (width, height) = renderer.get_window().get_size().into();
+                width as f32 / height as f32
+            },
+            near: 0.001,
+            far: 1000.0,
         },
     };
 
@@ -68,16 +66,20 @@ fn main() {
                 WindowEvent::Close => break 'main_loop,
                 WindowEvent::Resize(size) => {
                     renderer.resize(size);
-                    camera.projection_type = {
-                        let (width, height) = renderer.get_window().get_size().into();
+                    let aspect_ratio = size.x as f32 / size.y as f32;
+                    match &mut camera.projection_type {
+                        CameraProjectionType::None => {}
                         CameraProjectionType::Orthographic {
-                            left: -(width as f32 / height as f32),
-                            right: (width as f32 / height as f32),
-                            top: 1.0,
-                            bottom: -1.0,
-                            near: -1.0,
-                            far: 1.0,
+                            left,
+                            right,
+                            top,
+                            bottom,
+                            ..
+                        } => {
+                            *left = -aspect_ratio * *bottom;
+                            *right = aspect_ratio * *top;
                         }
+                        CameraProjectionType::Perspective { aspect, .. } => *aspect = aspect_ratio,
                     }
                 }
                 WindowEvent::KeyPressed(_) => {}
@@ -92,10 +94,10 @@ fn main() {
 
             let window = renderer.get_window();
             if window.get_key_state(Keycode::W) {
-                camera.transform.position.y += 2.0 * ts;
+                camera.transform.position.z += 2.0 * ts;
             }
             if window.get_key_state(Keycode::S) {
-                camera.transform.position.y -= 2.0 * ts;
+                camera.transform.position.z -= 2.0 * ts;
             }
             if window.get_key_state(Keycode::A) {
                 camera.transform.position.x -= 2.0 * ts;
@@ -111,7 +113,11 @@ fn main() {
             draw_context.draw(
                 shader,
                 vertex_buffer,
-                Matrix::identity(),
+                Transform {
+                    position: (0.0, 0.0, 3.0).into(),
+                    ..Default::default()
+                }
+                .into(),
                 (0.8, 0.2, 0.1).into(),
             );
         }

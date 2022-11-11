@@ -1,5 +1,5 @@
 use crate::{
-    math::{Matrix4x4, One, Two, Zero},
+    math::{Matrix4x4, One, Recip, Tan, ToRadians, Two, Zero},
     scene::Transform,
 };
 
@@ -13,6 +13,12 @@ pub enum CameraProjectionType<T> {
         near: T,
         far: T,
     },
+    Perspective {
+        fov: T,
+        aspect: T,
+        near: T,
+        far: T,
+    },
 }
 
 impl<T> Into<Matrix4x4<T>> for CameraProjectionType<T>
@@ -21,8 +27,12 @@ where
         + Zero
         + One
         + Two
+        + ToRadians
+        + Tan
+        + Recip
         + std::ops::Add<T, Output = T>
         + std::ops::Sub<T, Output = T>
+        + std::ops::Mul<T, Output = T>
         + std::ops::Div<T, Output = T>
         + std::ops::Neg<Output = T>,
 {
@@ -62,6 +72,32 @@ where
                     T::one(),
                 ],
             ]),
+            CameraProjectionType::Perspective {
+                fov,
+                aspect,
+                near,
+                far,
+            } => {
+                let fov_radians = fov.to_radians();
+                let tan_fov_over_2 = (fov_radians / T::two()).tan();
+                Matrix4x4::new([
+                    [
+                        (aspect * tan_fov_over_2.clone()).recip(),
+                        T::zero(),
+                        T::zero(),
+                        T::zero(),
+                    ],
+                    [T::zero(), tan_fov_over_2.recip(), T::zero(), T::zero()],
+                    [
+                        T::zero(),
+                        T::zero(),
+                        -(far.clone() + near.clone()) / (far.clone() - near.clone()),
+                        (T::two() * far.clone() * near.clone()) / (far - near),
+                    ],
+                    [T::zero(), T::zero(), T::one(), T::zero()],
+                ])
+                .transpose()
+            }
         }
     }
 }
@@ -85,6 +121,17 @@ where
                 right: right.clone(),
                 top: top.clone(),
                 bottom: bottom.clone(),
+                near: near.clone(),
+                far: far.clone(),
+            },
+            Self::Perspective {
+                fov,
+                aspect,
+                near,
+                far,
+            } => Self::Perspective {
+                fov: fov.clone(),
+                aspect: aspect.clone(),
                 near: near.clone(),
                 far: far.clone(),
             },

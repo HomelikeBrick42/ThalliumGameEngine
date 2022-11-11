@@ -21,6 +21,15 @@ impl<T, const R: usize, const C: usize> Matrix<T, R, C> {
             }),
         }
     }
+
+    pub fn transpose(&self) -> Self
+    where
+        T: Clone,
+    {
+        Self {
+            elements: std::array::from_fn(|i| std::array::from_fn(|j| self[j][i].clone())),
+        }
+    }
 }
 
 impl<T> Matrix4x4<T> {
