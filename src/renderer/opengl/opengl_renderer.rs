@@ -257,7 +257,20 @@ impl Renderer for OpenGLRenderer {
         }
     }
 
-    fn drawing_context<'a>(&'a mut self, camera: Camera<f32>) -> Box<dyn RendererDrawContext + 'a> {
+    fn drawing_context<'a>(
+        &'a mut self,
+        camera: Camera<f32>,
+        depth_testing: bool,
+    ) -> Box<dyn RendererDrawContext + 'a> {
+        unsafe {
+            if depth_testing {
+                gl::Enable(gl::DEPTH_TEST);
+                gl::DepthFunc(gl::GEQUAL);
+                gl::ClearDepth(0.0);
+            } else {
+                gl::Disable(gl::DEPTH_TEST);
+            }
+        }
         Box::new(OpenGLRendererDrawContext {
             renderer: self,
             view_matrix: camera.transform.into(),

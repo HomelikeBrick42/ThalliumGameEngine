@@ -46,7 +46,11 @@ pub trait Renderer {
     fn present(&mut self);
 
     fn clear(&mut self, color: Vector3<f32>);
-    fn drawing_context<'a>(&'a mut self, camera: Camera<f32>) -> Box<dyn RendererDrawContext + 'a>;
+    fn drawing_context<'a>(
+        &'a mut self,
+        camera: Camera<f32>,
+        depth_testing: bool,
+    ) -> Box<dyn RendererDrawContext + 'a>;
 }
 
 pub trait RendererDrawContext {

@@ -128,7 +128,7 @@ fn main() {
 
         renderer.clear((0.2, 0.4, 0.8).into());
         {
-            let mut draw_context = renderer.drawing_context(camera);
+            let mut draw_context = renderer.drawing_context(camera, true);
             draw_context.draw(
                 shader,
                 vertex_buffer,
