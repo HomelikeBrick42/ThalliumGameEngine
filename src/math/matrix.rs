@@ -1,6 +1,6 @@
 use crate::math::{One, Zero};
 
-use super::Vector4;
+use super::{Vector3, Vector4};
 
 pub type Matrix4x4<T> = Matrix<T, 4, 4>;
 
@@ -11,6 +11,47 @@ pub struct Matrix<T, const R: usize, const C: usize> {
 impl<T, const R: usize, const C: usize> Matrix<T, R, C> {
     pub fn new(elements: [[T; C]; R]) -> Self {
         Self { elements }
+    }
+
+    pub fn identity() -> Self
+    where
+        T: Zero + One,
+    {
+        Self {
+            elements: std::array::from_fn(|row| {
+                std::array::from_fn(|column| if row == column { T::one() } else { T::zero() })
+            }),
+        }
+    }
+}
+
+impl<T> Matrix4x4<T> {
+    pub fn scale(scale: Vector3<T>) -> Self
+    where
+        T: Zero + One,
+    {
+        Self {
+            elements: [
+                [scale.x, T::zero(), T::zero(), T::zero()],
+                [T::zero(), scale.y, T::zero(), T::zero()],
+                [T::zero(), T::zero(), scale.z, T::zero()],
+                [T::zero(), T::zero(), T::zero(), T::one()],
+            ],
+        }
+    }
+
+    pub fn translation(offset: Vector3<T>) -> Self
+    where
+        T: Zero + One,
+    {
+        Self {
+            elements: [
+                [T::one(), T::zero(), T::zero(), T::zero()],
+                [T::zero(), T::one(), T::zero(), T::zero()],
+                [T::zero(), T::zero(), T::one(), T::zero()],
+                [offset.x, offset.y, offset.z, T::one()],
+            ],
+        }
     }
 }
 
@@ -68,13 +109,11 @@ impl<T, const R: usize, const C: usize> std::ops::IndexMut<usize> for Matrix<T, 
 
 impl<T, const R: usize, const C: usize> Default for Matrix<T, R, C>
 where
-    T: Zero + One,
+    T: Default,
 {
     fn default() -> Self {
         Self {
-            elements: std::array::from_fn(|row| {
-                std::array::from_fn(|column| if row == column { T::one() } else { T::zero() })
-            }),
+            elements: std::array::from_fn(|_| std::array::from_fn(|_| Default::default())),
         }
     }
 }
