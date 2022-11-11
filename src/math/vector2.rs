@@ -1,4 +1,4 @@
-use crate::math::{Recip, Sqrt};
+use crate::math::{One, Recip, Sqrt, Zero};
 
 pub struct Vector2<T> {
     pub x: T,
@@ -167,6 +167,30 @@ where
         Self {
             x: T::default(),
             y: T::default(),
+        }
+    }
+}
+
+impl<T> Zero for Vector2<T>
+where
+    T: Zero,
+{
+    fn zero() -> Self {
+        Self {
+            x: T::zero(),
+            y: T::zero(),
+        }
+    }
+}
+
+impl<T> One for Vector2<T>
+where
+    T: One,
+{
+    fn one() -> Self {
+        Self {
+            x: T::one(),
+            y: T::one(),
         }
     }
 }
