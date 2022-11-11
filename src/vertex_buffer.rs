@@ -17,4 +17,6 @@ pub enum VertexBufferElement {
 pub trait VertexBuffer {
     fn get_id(&self) -> VertexBufferID;
     fn get_count(&self) -> usize;
+    fn set_layout(&mut self, layout: &[VertexBufferElement], data: &[u8]);
+    fn set_data(&mut self, data: &[u8]);
 }

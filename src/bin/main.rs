@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use game_engine::*;
 
 fn main() {
@@ -8,9 +10,26 @@ fn main() {
         include_str!("./basic.frag.glsl"),
     );
 
-    let vertices: &[Vector2<f32>] = &[(0.0, 0.5).into(), (0.5, -0.5).into(), (-0.5, -0.5).into()];
+    struct Vertex {
+        position: Vector2<f32>,
+        color: Vector3<f32>,
+    }
+    let vertices: &[Vertex] = &[
+        Vertex {
+            position: (0.0, 0.5).into(),
+            color: (1.0, 0.0, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, -0.5).into(),
+            color: (0.0, 0.0, 1.0).into(),
+        },
+        Vertex {
+            position: (-0.5, -0.5).into(),
+            color: (0.0, 1.0, 0.0).into(),
+        },
+    ];
     let vertex_buffer = renderer.create_vertex_buffer(
-        &[VertexBufferElement::Float2],
+        &[VertexBufferElement::Float2, VertexBufferElement::Float3],
         slice_to_bytes(vertices),
     );
 
