@@ -94,16 +94,35 @@ fn main() {
 
             let window = renderer.get_window();
             if window.get_key_state(Keycode::W) {
-                camera.transform.position.z += 2.0 * ts;
+                camera.transform.position += camera.transform.forward() * Vector3::from(2.0 * ts);
             }
             if window.get_key_state(Keycode::S) {
-                camera.transform.position.z -= 2.0 * ts;
+                camera.transform.position -= camera.transform.forward() * Vector3::from(2.0 * ts);
             }
             if window.get_key_state(Keycode::A) {
-                camera.transform.position.x -= 2.0 * ts;
+                camera.transform.position -= camera.transform.right() * Vector3::from(2.0 * ts);
             }
             if window.get_key_state(Keycode::D) {
-                camera.transform.position.x += 2.0 * ts;
+                camera.transform.position += camera.transform.right() * Vector3::from(2.0 * ts);
+            }
+            if window.get_key_state(Keycode::Q) {
+                camera.transform.position -= camera.transform.up() * Vector3::from(2.0 * ts);
+            }
+            if window.get_key_state(Keycode::E) {
+                camera.transform.position += camera.transform.up() * Vector3::from(2.0 * ts);
+            }
+
+            if window.get_key_state(Keycode::Left) {
+                camera.transform.rotation.y -= 90.0 * ts;
+            }
+            if window.get_key_state(Keycode::Right) {
+                camera.transform.rotation.y += 90.0 * ts;
+            }
+            if window.get_key_state(Keycode::Up) {
+                camera.transform.rotation.x += 90.0 * ts;
+            }
+            if window.get_key_state(Keycode::Down) {
+                camera.transform.rotation.x -= 90.0 * ts;
             }
         }
 
@@ -114,7 +133,19 @@ fn main() {
                 shader,
                 vertex_buffer,
                 Transform {
-                    position: (0.0, 0.0, 3.0).into(),
+                    position: (1.5, 0.0, 3.0).into(),
+                    rotation: (0.0, 0.0, 0.0).into(),
+                    ..Default::default()
+                }
+                .into(),
+                (0.8, 0.2, 0.1).into(),
+            );
+            draw_context.draw(
+                shader,
+                vertex_buffer,
+                Transform {
+                    position: (-1.5, 0.0, 3.0).into(),
+                    rotation: (45.0, 45.0, 0.0).into(),
                     ..Default::default()
                 }
                 .into(),

@@ -1,4 +1,4 @@
-use crate::math::{Cos, Matrix4x4, One, Sin, ToRadians, Vector3, Zero};
+use crate::math::{Cos, Matrix4x4, One, Sin, ToRadians, Vector3, Vector4, Zero};
 
 pub struct Transform<T> {
     pub position: Vector3<T>,
@@ -13,6 +13,60 @@ impl<T> Transform<T> {
             rotation,
             scale,
         }
+    }
+
+    pub fn forward(self) -> Vector3<T>
+    where
+        T: Clone
+            + Zero
+            + One
+            + ToRadians
+            + Sin
+            + Cos
+            + std::ops::Mul<T, Output = T>
+            + std::ops::Add<T, Output = T>
+            + std::ops::Neg<Output = T>,
+    {
+        let (x, y, z, _) = (Matrix4x4::rotation(self.rotation)
+            * Vector4::new(T::zero(), T::zero(), T::one(), T::one()))
+        .into();
+        (x, y, z).into()
+    }
+
+    pub fn right(self) -> Vector3<T>
+    where
+        T: Clone
+            + Zero
+            + One
+            + ToRadians
+            + Sin
+            + Cos
+            + std::ops::Mul<T, Output = T>
+            + std::ops::Add<T, Output = T>
+            + std::ops::Neg<Output = T>,
+    {
+        let (x, y, z, _) = (Matrix4x4::rotation(self.rotation)
+            * Vector4::new(T::one(), T::zero(), T::zero(), T::one()))
+        .into();
+        (x, y, z).into()
+    }
+
+    pub fn up(self) -> Vector3<T>
+    where
+        T: Clone
+            + Zero
+            + One
+            + ToRadians
+            + Sin
+            + Cos
+            + std::ops::Mul<T, Output = T>
+            + std::ops::Add<T, Output = T>
+            + std::ops::Neg<Output = T>,
+    {
+        let (x, y, z, _) = (Matrix4x4::rotation(self.rotation)
+            * Vector4::new(T::zero(), T::one(), T::zero(), T::one()))
+        .into();
+        (x, y, z).into()
     }
 }
 

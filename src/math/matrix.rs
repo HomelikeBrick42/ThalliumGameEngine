@@ -22,11 +22,11 @@ impl<T, const R: usize, const C: usize> Matrix<T, R, C> {
         }
     }
 
-    pub fn transpose(&self) -> Self
+    pub fn transpose(&self) -> Matrix<T, C, R>
     where
         T: Clone,
     {
-        Self {
+        Matrix {
             elements: std::array::from_fn(|i| std::array::from_fn(|j| self[j][i].clone())),
         }
     }
@@ -85,7 +85,7 @@ impl<T> Matrix4x4<T> {
     where
         T: Clone + Zero + One + ToRadians + Sin + Cos + std::ops::Neg<Output = T>,
     {
-        let radians = degrees.to_radians();
+        let radians = -degrees.to_radians();
         Self {
             elements: [
                 [
@@ -105,7 +105,7 @@ impl<T> Matrix4x4<T> {
     where
         T: Clone + Zero + One + ToRadians + Sin + Cos + std::ops::Neg<Output = T>,
     {
-        let radians = degrees.to_radians();
+        let radians = -degrees.to_radians();
         Self {
             elements: [
                 [
@@ -133,7 +133,7 @@ impl<T> Matrix4x4<T> {
             + std::ops::Add<T, Output = T>
             + std::ops::Neg<Output = T>,
     {
-        Self::rotation_z(degrees.z) * Self::rotation_y(degrees.y) * Self::rotation_x(degrees.x)
+        Self::rotation_z(degrees.z) * Self::rotation_x(degrees.x) * Self::rotation_y(degrees.y)
     }
 }
 
@@ -165,7 +165,7 @@ where
 
     fn mul(self, other: Vector4<T>) -> Self::Output {
         let matrix = Matrix::new([[other.x], [other.y], [other.z], [other.w]]);
-        let result = self * matrix;
+        let result = self.transpose() * matrix;
         Self::Output {
             x: result[0][0].clone(),
             y: result[1][0].clone(),
