@@ -5,10 +5,12 @@ use game_engine::*;
 fn main() {
     let mut renderer = Window::new((640, 480).into(), "Test").into_renderer(RendererAPI::OpenGL);
 
-    let shader = renderer.create_shader(
-        include_str!("./basic.vert.glsl"),
-        include_str!("./basic.frag.glsl"),
-    );
+    let shader = renderer
+        .create_shader(
+            include_str!("./basic.vert.glsl"),
+            include_str!("./basic.frag.glsl"),
+        )
+        .unwrap();
 
     struct Vertex {
         position: Vector2<f32>,

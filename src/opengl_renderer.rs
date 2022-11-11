@@ -191,11 +191,11 @@ impl Renderer for OpenGLRenderer {
         &mut self,
         vertex_shader_source: &str,
         fragment_shader_source: &str,
-    ) -> ShaderID {
-        let shader = OpenGLShader::new(vertex_shader_source, fragment_shader_source);
+    ) -> Result<ShaderID, String> {
+        let shader = OpenGLShader::new(vertex_shader_source, fragment_shader_source)?;
         let id = shader.get_id();
         assert!(self.shaders.insert(id, shader).is_none());
-        id
+        Ok(id)
     }
 
     fn destroy_shader(&mut self, id: ShaderID) {

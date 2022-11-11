@@ -18,7 +18,7 @@ pub trait Renderer {
         &mut self,
         vertex_shader_source: &str,
         fragment_shader_source: &str,
-    ) -> ShaderID;
+    ) -> Result<ShaderID, String>;
     fn destroy_shader(&mut self, id: ShaderID);
     fn get_shader(&self, id: ShaderID) -> Option<&dyn Shader>;
     fn get_shader_mut(&mut self, id: ShaderID) -> Option<&mut dyn Shader>;
