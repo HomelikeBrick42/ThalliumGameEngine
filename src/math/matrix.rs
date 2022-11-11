@@ -1,4 +1,4 @@
-use crate::math::{One, Vector3, Vector4, Zero};
+use crate::math::{Cos, One, Sin, ToRadians, Vector3, Vector4, Zero};
 
 pub type Matrix4x4<T> = Matrix<T, 4, 4>;
 
@@ -50,6 +50,81 @@ impl<T> Matrix4x4<T> {
                 [offset.x, offset.y, offset.z, T::one()],
             ],
         }
+    }
+
+    pub fn rotation_x(degrees: T) -> Self
+    where
+        T: Clone + Zero + One + ToRadians + Sin + Cos + std::ops::Neg<Output = T>,
+    {
+        let radians = degrees.to_radians();
+        Self {
+            elements: [
+                [T::one(), T::zero(), T::zero(), T::zero()],
+                [
+                    T::zero(),
+                    radians.clone().cos(),
+                    -radians.clone().sin(),
+                    T::zero(),
+                ],
+                [T::zero(), radians.clone().sin(), radians.cos(), T::zero()],
+                [T::zero(), T::zero(), T::zero(), T::one()],
+            ],
+        }
+    }
+
+    pub fn rotation_y(degrees: T) -> Self
+    where
+        T: Clone + Zero + One + ToRadians + Sin + Cos + std::ops::Neg<Output = T>,
+    {
+        let radians = degrees.to_radians();
+        Self {
+            elements: [
+                [
+                    radians.clone().cos(),
+                    T::zero(),
+                    radians.clone().sin(),
+                    T::zero(),
+                ],
+                [T::zero(), T::one(), T::zero(), T::zero()],
+                [-radians.clone().sin(), T::zero(), radians.cos(), T::zero()],
+                [T::zero(), T::zero(), T::zero(), T::one()],
+            ],
+        }
+    }
+
+    pub fn rotation_z(degrees: T) -> Self
+    where
+        T: Clone + Zero + One + ToRadians + Sin + Cos + std::ops::Neg<Output = T>,
+    {
+        let radians = degrees.to_radians();
+        Self {
+            elements: [
+                [
+                    radians.clone().cos(),
+                    -radians.clone().sin(),
+                    T::zero(),
+                    T::zero(),
+                ],
+                [radians.clone().sin(), radians.cos(), T::zero(), T::zero()],
+                [T::zero(), T::zero(), T::one(), T::zero()],
+                [T::zero(), T::zero(), T::zero(), T::one()],
+            ],
+        }
+    }
+
+    pub fn rotation(degrees: Vector3<T>) -> Self
+    where
+        T: Clone
+            + Zero
+            + One
+            + ToRadians
+            + Sin
+            + Cos
+            + std::ops::Mul<T, Output = T>
+            + std::ops::Add<T, Output = T>
+            + std::ops::Neg<Output = T>,
+    {
+        Self::rotation_z(degrees.z) * Self::rotation_y(degrees.y) * Self::rotation_x(degrees.x)
     }
 }
 

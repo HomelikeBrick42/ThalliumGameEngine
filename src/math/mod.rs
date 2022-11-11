@@ -24,6 +24,70 @@ impl Sqrt for f64 {
     }
 }
 
+pub trait ToDegrees {
+    fn to_degrees(self) -> Self;
+}
+
+impl ToDegrees for f32 {
+    fn to_degrees(self) -> Self {
+        self.to_degrees()
+    }
+}
+
+impl ToDegrees for f64 {
+    fn to_degrees(self) -> Self {
+        self.to_degrees()
+    }
+}
+
+pub trait ToRadians {
+    fn to_radians(self) -> Self;
+}
+
+impl ToRadians for f32 {
+    fn to_radians(self) -> Self {
+        self.to_radians()
+    }
+}
+
+impl ToRadians for f64 {
+    fn to_radians(self) -> Self {
+        self.to_radians()
+    }
+}
+
+pub trait Sin {
+    fn sin(self) -> Self;
+}
+
+impl Sin for f32 {
+    fn sin(self) -> Self {
+        self.sin()
+    }
+}
+
+impl Sin for f64 {
+    fn sin(self) -> Self {
+        self.sin()
+    }
+}
+
+pub trait Cos {
+    fn cos(self) -> Self;
+}
+
+impl Cos for f32 {
+    fn cos(self) -> Self {
+        self.cos()
+    }
+}
+
+impl Cos for f64 {
+    fn cos(self) -> Self {
+        self.cos()
+    }
+}
+
 pub trait Recip {
     fn recip(self) -> Self;
 }
