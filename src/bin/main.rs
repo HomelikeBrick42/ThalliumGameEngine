@@ -35,15 +35,18 @@ fn main() {
         slice_to_bytes(vertices),
     );
 
-    let camera = Camera {
+    let mut camera = Camera {
         transform: Transform::default(),
-        projection_type: CameraProjectionType::Orthographic {
-            left: -1.0,
-            right: 1.0,
-            top: 1.0,
-            bottom: -1.0,
-            near: -1.0,
-            far: 1.0,
+        projection_type: {
+            let (width, height) = renderer.get_window().get_size().into();
+            CameraProjectionType::Orthographic {
+                left: -(width as f32 / height as f32),
+                right: (width as f32 / height as f32),
+                top: 1.0,
+                bottom: -1.0,
+                near: -1.0,
+                far: 1.0,
+            }
         },
     };
 
@@ -52,7 +55,20 @@ fn main() {
         for event in renderer.get_window_mut().events() {
             match event {
                 WindowEvent::Close => break 'main_loop,
-                WindowEvent::Resize(size) => renderer.resize(size),
+                WindowEvent::Resize(size) => {
+                    renderer.resize(size);
+                    camera.projection_type = {
+                        let (width, height) = renderer.get_window().get_size().into();
+                        CameraProjectionType::Orthographic {
+                            left: -(width as f32 / height as f32),
+                            right: (width as f32 / height as f32),
+                            top: 1.0,
+                            bottom: -1.0,
+                            near: -1.0,
+                            far: 1.0,
+                        }
+                    }
+                }
             }
         }
 
