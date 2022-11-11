@@ -4,6 +4,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+use enum_map::{Enum, EnumMap};
 use widestring::U16CString;
 use windows::{
     core::PCWSTR,
@@ -15,8 +16,8 @@ use windows::{
             GetClientRect, GetWindowLongPtrW, LoadCursorW, PeekMessageW, RegisterClassExW,
             SetWindowLongPtrW, ShowWindow, TranslateMessage, UnregisterClassW, CREATESTRUCTW,
             CS_OWNDC, CW_USEDEFAULT, GWLP_USERDATA, HMENU, IDC_ARROW, MSG, PM_REMOVE, SW_HIDE,
-            SW_SHOW, WINDOW_EX_STYLE, WM_CLOSE, WM_NCCREATE, WM_QUIT, WM_SIZE, WNDCLASSEXW,
-            WS_OVERLAPPEDWINDOW,
+            SW_SHOW, WINDOW_EX_STYLE, WM_CLOSE, WM_KEYDOWN, WM_KEYUP, WM_NCCREATE, WM_QUIT,
+            WM_SIZE, WM_SYSKEYDOWN, WM_SYSKEYUP, WNDCLASSEXW, WS_OVERLAPPEDWINDOW,
         },
     },
 };
@@ -29,6 +30,18 @@ use crate::{
 pub enum WindowEvent {
     Close,
     Resize(Vector2<usize>),
+    KeyPressed(Keycode),
+    KeyReleased(Keycode),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Enum)]
+pub enum Keycode {
+    W,
+    A,
+    S,
+    D,
+    Q,
+    E,
 }
 
 pub struct Window {
@@ -37,6 +50,7 @@ pub struct Window {
     size: Vector2<usize>,
     pub(crate) window_handle: HWND,
     events: Vec<WindowEvent>,
+    key_states: EnumMap<Keycode, bool>,
 }
 
 impl Window {
@@ -88,6 +102,7 @@ impl Window {
             size,
             window_handle: HWND::default(),
             events: vec![],
+            key_states: EnumMap::default(),
         }));
 
         let window_title = U16CString::from_str(title).unwrap();
@@ -123,6 +138,10 @@ impl Window {
 
     pub fn get_size(&self) -> Vector2<usize> {
         self.size
+    }
+
+    pub fn get_key_state(&self, key: Keycode) -> bool {
+        self.key_states[key]
     }
 
     pub fn events(&mut self) -> impl Iterator<Item = WindowEvent> {
@@ -188,6 +207,29 @@ unsafe extern "system" fn window_message_callback(
                 window.size = (width as _, height as _).into();
                 window.events.push(WindowEvent::Resize(window.size));
             }
+        }
+        WM_KEYDOWN | WM_KEYUP | WM_SYSKEYDOWN | WM_SYSKEYUP => 'key_handling: {
+            let pressed = matches!(message, WM_KEYDOWN | WM_SYSKEYDOWN);
+            let keycode = match w_param.0 {
+                0x41 => Keycode::A,
+                0x44 => Keycode::D,
+                0x45 => Keycode::E,
+                0x51 => Keycode::Q,
+                0x53 => Keycode::S,
+                0x57 => Keycode::W,
+                _ => break 'key_handling,
+            };
+            window.key_states[keycode] = pressed;
+            window.events.extend(
+                std::iter::repeat_with(|| {
+                    if pressed {
+                        WindowEvent::KeyPressed(keycode)
+                    } else {
+                        WindowEvent::KeyReleased(keycode)
+                    }
+                })
+                .take((l_param.0 & 0xFF) as _),
+            );
         }
         _ => result = DefWindowProcW(hwnd, message, w_param, l_param),
     }

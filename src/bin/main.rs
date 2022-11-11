@@ -51,7 +51,12 @@ fn main() {
     };
 
     renderer.get_window_mut().show();
+    let mut last_time = std::time::Instant::now();
     'main_loop: loop {
+        let time = std::time::Instant::now();
+        let ts = last_time.elapsed().as_secs_f32();
+        last_time = time;
+
         for event in renderer.get_window_mut().events() {
             match event {
                 WindowEvent::Close => break 'main_loop,
@@ -69,6 +74,24 @@ fn main() {
                         }
                     }
                 }
+                WindowEvent::KeyPressed(_) => {}
+                WindowEvent::KeyReleased(_) => {}
+            }
+        }
+
+        {
+            let window = renderer.get_window();
+            if window.get_key_state(Keycode::W) {
+                camera.transform.position.y += 2.0 * ts;
+            }
+            if window.get_key_state(Keycode::S) {
+                camera.transform.position.y -= 2.0 * ts;
+            }
+            if window.get_key_state(Keycode::A) {
+                camera.transform.position.x -= 2.0 * ts;
+            }
+            if window.get_key_state(Keycode::D) {
+                camera.transform.position.x += 2.0 * ts;
             }
         }
 
