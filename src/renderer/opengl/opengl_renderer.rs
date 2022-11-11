@@ -282,7 +282,8 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
         &mut self,
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
-        model_matrix: crate::math::Matrix4x4<f32>,
+        model_matrix: Matrix4x4<f32>,
+        color: Vector3<f32>,
     ) {
         // TODO: maybe some proper error handling
         let Some(shader) = self.renderer.shaders.get_mut(&shader) else { return; };
@@ -294,6 +295,7 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
             gl::UniformMatrix4fv(0, 1, false as _, &self.projection_matrix[0][0]);
             gl::UniformMatrix4fv(1, 1, false as _, &self.view_matrix[0][0]);
             gl::UniformMatrix4fv(2, 1, false as _, &model_matrix[0][0]);
+            gl::Uniform3f(3, color.x, color.y, color.z);
             gl::DrawArrays(gl::TRIANGLES, 0, vertex_buffer.get_count() as _);
         }
         vertex_buffer.unbind();

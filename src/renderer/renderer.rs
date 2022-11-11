@@ -55,5 +55,6 @@ pub trait RendererDrawContext {
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
         model_matrix: Matrix4x4<f32>,
+        color: Vector3<f32>,
     );
 }

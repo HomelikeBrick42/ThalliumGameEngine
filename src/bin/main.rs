@@ -13,27 +13,30 @@ fn main() {
         .unwrap();
 
     struct Vertex {
-        position: Vector2<f32>,
-        color: Vector3<f32>,
+        position: Vector3<f32>,
     }
     let vertices: &[Vertex] = &[
         Vertex {
-            position: (0.0, 0.5).into(),
-            color: (1.0, 0.0, 0.0).into(),
+            position: (-0.5, 0.5, 0.0).into(),
         },
         Vertex {
-            position: (0.5, -0.5).into(),
-            color: (0.0, 0.0, 1.0).into(),
+            position: (0.5, 0.5, 0.0).into(),
         },
         Vertex {
-            position: (-0.5, -0.5).into(),
-            color: (0.0, 1.0, 0.0).into(),
+            position: (0.5, -0.5, 0.0).into(),
+        },
+        Vertex {
+            position: (-0.5, 0.5, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, -0.5, 0.0).into(),
+        },
+        Vertex {
+            position: (-0.5, -0.5, 0.0).into(),
         },
     ];
-    let vertex_buffer = renderer.create_vertex_buffer(
-        &[VertexBufferElement::Float2, VertexBufferElement::Float3],
-        slice_to_bytes(vertices),
-    );
+    let vertex_buffer =
+        renderer.create_vertex_buffer(&[VertexBufferElement::Float3], slice_to_bytes(vertices));
 
     let mut camera = Camera {
         transform: Transform::default(),
@@ -105,7 +108,12 @@ fn main() {
         renderer.clear((0.2, 0.4, 0.8).into());
         {
             let mut draw_context = renderer.drawing_context(camera);
-            draw_context.draw(shader, vertex_buffer, Matrix::identity());
+            draw_context.draw(
+                shader,
+                vertex_buffer,
+                Matrix::identity(),
+                (0.8, 0.2, 0.1).into(),
+            );
         }
         renderer.present();
     }
