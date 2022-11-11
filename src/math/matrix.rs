@@ -1,5 +1,7 @@
 use crate::math::{One, Zero};
 
+use super::Vector4;
+
 pub type Matrix4x4<T> = Matrix<T, 4, 4>;
 
 pub struct Matrix<T, const R: usize, const C: usize> {
@@ -29,6 +31,24 @@ where
                 sum
             })
         }))
+    }
+}
+
+impl<T> std::ops::Mul<Vector4<T>> for Matrix<T, 4, 4>
+where
+    T: Clone + Zero + std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T>,
+{
+    type Output = Vector4<T>;
+
+    fn mul(self, other: Vector4<T>) -> Self::Output {
+        let matrix = Matrix::new([[other.x], [other.y], [other.z], [other.w]]);
+        let result = self * matrix;
+        Self::Output {
+            x: result[0][0].clone(),
+            y: result[1][0].clone(),
+            z: result[2][0].clone(),
+            w: result[3][0].clone(),
+        }
     }
 }
 
