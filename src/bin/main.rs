@@ -50,12 +50,15 @@ fn main() {
         },
     };
 
+    const FIXED_UPDATE_INTERVAL: f32 = 1.0 / 60.0;
+
     renderer.get_window_mut().show();
-    let mut last_time = std::time::Instant::now();
+    let mut fixed_update_time = 0.0;
+    let mut last_now = std::time::Instant::now();
     'main_loop: loop {
-        let time = std::time::Instant::now();
-        let ts = last_time.elapsed().as_secs_f32();
-        last_time = time;
+        let now = std::time::Instant::now();
+        let ts = now.duration_since(last_now).as_secs_f32();
+        last_now = now;
 
         for event in renderer.get_window_mut().events() {
             match event {
@@ -79,7 +82,11 @@ fn main() {
             }
         }
 
-        {
+        fixed_update_time += ts;
+        while fixed_update_time > FIXED_UPDATE_INTERVAL {
+            fixed_update_time -= FIXED_UPDATE_INTERVAL;
+            let ts = FIXED_UPDATE_INTERVAL;
+
             let window = renderer.get_window();
             if window.get_key_state(Keycode::W) {
                 camera.transform.position.y += 2.0 * ts;
