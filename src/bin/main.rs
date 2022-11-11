@@ -149,7 +149,7 @@ fn main() {
                     ..Default::default()
                 }
                 .into(),
-                (0.8, 0.2, 0.1).into(),
+                (0.2, 0.8, 0.1).into(),
             );
         }
         renderer.present();
