@@ -1,4 +1,4 @@
-use crate::math::{One, Vector3, Zero};
+use crate::math::{Matrix4x4, One, Vector3, Zero};
 
 pub struct Transform<T> {
     pub position: Vector3<T>,
@@ -13,6 +13,16 @@ impl<T> Transform<T> {
             rotation,
             scale,
         }
+    }
+}
+
+impl<T> Into<Matrix4x4<T>> for Transform<T>
+where
+    T: Clone + Zero + One + std::ops::Mul<T, Output = T> + std::ops::Add<T, Output = T>,
+{
+    fn into(self) -> Matrix4x4<T> {
+        // TODO: rotation
+        Matrix4x4::scale(self.scale) * Matrix4x4::translation(self.position)
     }
 }
 
