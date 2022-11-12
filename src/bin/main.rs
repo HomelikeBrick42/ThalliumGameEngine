@@ -26,17 +26,13 @@ fn main() {
             position: (0.5, -0.5, 0.0).into(),
         },
         Vertex {
-            position: (-0.5, 0.5, 0.0).into(),
-        },
-        Vertex {
-            position: (0.5, -0.5, 0.0).into(),
-        },
-        Vertex {
             position: (-0.5, -0.5, 0.0).into(),
         },
     ];
     let vertex_buffer =
         renderer.create_vertex_buffer(&[VertexBufferElement::Float3], slice_to_bytes(vertices));
+
+    let index_buffer = renderer.create_index_buffer(&[0, 1, 2, 0, 2, 3]);
 
     let mut camera = Camera {
         transform: Transform::default(),
@@ -129,9 +125,10 @@ fn main() {
         renderer.clear((0.2, 0.4, 0.8).into());
         {
             let mut draw_context = renderer.drawing_context(camera, true);
-            draw_context.draw(
+            draw_context.draw_indexed(
                 shader,
                 vertex_buffer,
+                index_buffer,
                 Transform {
                     position: (1.5, 0.0, 3.0).into(),
                     rotation: (0.0, 0.0, 0.0).into(),
@@ -140,9 +137,10 @@ fn main() {
                 .into(),
                 (0.8, 0.2, 0.1).into(),
             );
-            draw_context.draw(
+            draw_context.draw_indexed(
                 shader,
                 vertex_buffer,
+                index_buffer,
                 Transform {
                     position: (-1.5, 0.0, 3.0).into(),
                     rotation: (45.0, 45.0, 0.0).into(),

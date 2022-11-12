@@ -9,6 +9,8 @@ use crate::{
     Window,
 };
 
+use super::{IndexBuffer, IndexBufferID};
+
 pub enum RendererAPI {
     OpenGL,
 }
@@ -42,6 +44,11 @@ pub trait Renderer {
     fn get_vertex_buffer(&self, id: VertexBufferID) -> Option<&dyn VertexBuffer>;
     fn get_vertex_buffer_mut(&mut self, id: VertexBufferID) -> Option<&mut dyn VertexBuffer>;
 
+    fn create_index_buffer(&mut self, indices: &[u32]) -> IndexBufferID;
+    fn destroy_index_buffer(&mut self, id: IndexBufferID);
+    fn get_index_buffer(&self, id: IndexBufferID) -> Option<&dyn IndexBuffer>;
+    fn get_index_buffer_mut(&mut self, id: IndexBufferID) -> Option<&mut dyn IndexBuffer>;
+
     fn resize(&mut self, size: Vector2<usize>);
     fn present(&mut self);
 
@@ -58,6 +65,14 @@ pub trait RendererDrawContext {
         &mut self,
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
+        model_matrix: Matrix4x4<f32>,
+        color: Vector3<f32>,
+    );
+    fn draw_indexed(
+        &mut self,
+        shader: ShaderID,
+        vertex_buffer: VertexBufferID,
+        index_buffer: IndexBufferID,
         model_matrix: Matrix4x4<f32>,
         color: Vector3<f32>,
     );

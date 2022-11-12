@@ -29,12 +29,14 @@ use windows::{
 use crate::{
     math::{Matrix4x4, Vector2, Vector3},
     renderer::{
-        opengl::OpenGLShader, opengl::OpenGLVertexBuffer, Renderer, RendererDrawContext, Shader,
-        ShaderID, VertexBuffer, VertexBufferElement, VertexBufferID,
+        opengl::OpenGLShader, opengl::OpenGLVertexBuffer, IndexBuffer, IndexBufferID, Renderer,
+        RendererDrawContext, Shader, ShaderID, VertexBuffer, VertexBufferElement, VertexBufferID,
     },
     scene::Camera,
     PhantomUnsend, PhantomUnsync, Window,
 };
+
+use super::OpenGLIndexBuffer;
 
 pub(crate) struct OpenGLRenderer {
     window: Option<Pin<Box<Window>>>,
@@ -43,6 +45,7 @@ pub(crate) struct OpenGLRenderer {
     opengl_context: HGLRC,
     shaders: HashMap<ShaderID, OpenGLShader>,
     vertex_buffers: HashMap<VertexBufferID, OpenGLVertexBuffer>,
+    index_buffers: HashMap<IndexBufferID, OpenGLIndexBuffer>,
     _send: PhantomUnsend,
     _sync: PhantomUnsync,
 }
@@ -147,6 +150,7 @@ impl OpenGLRenderer {
             opengl_context,
             shaders: HashMap::new(),
             vertex_buffers: HashMap::new(),
+            index_buffers: HashMap::new(),
             _send: PhantomData,
             _sync: PhantomData,
         }
@@ -242,6 +246,29 @@ impl Renderer for OpenGLRenderer {
             .map(|vertex_buffer| vertex_buffer as &mut dyn VertexBuffer)
     }
 
+    fn create_index_buffer(&mut self, indices: &[u32]) -> IndexBufferID {
+        let index_buffer = OpenGLIndexBuffer::new(indices);
+        let id = index_buffer.get_id();
+        assert!(self.index_buffers.insert(id, index_buffer).is_none());
+        id
+    }
+
+    fn destroy_index_buffer(&mut self, id: IndexBufferID) {
+        self.index_buffers.remove(&id);
+    }
+
+    fn get_index_buffer(&self, id: IndexBufferID) -> Option<&dyn IndexBuffer> {
+        self.index_buffers
+            .get(&id)
+            .map(|index_buffer| index_buffer as &dyn IndexBuffer)
+    }
+
+    fn get_index_buffer_mut(&mut self, id: IndexBufferID) -> Option<&mut dyn IndexBuffer> {
+        self.index_buffers
+            .get_mut(&id)
+            .map(|index_buffer| index_buffer as &mut dyn IndexBuffer)
+    }
+
     fn resize(&mut self, size: Vector2<usize>) {
         unsafe { gl::Viewport(0, 0, size.x as _, size.y as _) }
     }
@@ -308,8 +335,43 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
             gl::UniformMatrix4fv(1, 1, false as _, &self.view_matrix[0][0]);
             gl::UniformMatrix4fv(2, 1, false as _, &model_matrix[0][0]);
             gl::Uniform3f(3, color.x, color.y, color.z);
+            assert_eq!(vertex_buffer.get_count() % 3, 0);
             gl::DrawArrays(gl::TRIANGLES, 0, vertex_buffer.get_count() as _);
         }
+        vertex_buffer.unbind();
+        shader.unbind();
+    }
+
+    fn draw_indexed(
+        &mut self,
+        shader: ShaderID,
+        vertex_buffer: VertexBufferID,
+        index_buffer: IndexBufferID,
+        model_matrix: Matrix4x4<f32>,
+        color: Vector3<f32>,
+    ) {
+        // TODO: maybe some proper error handling
+        let Some(shader) = self.renderer.shaders.get_mut(&shader) else { return; };
+        let Some(vertex_buffer) = self.renderer.vertex_buffers.get_mut(&vertex_buffer) else { return; };
+        let Some(index_buffer) = self.renderer.index_buffers.get_mut(&index_buffer) else { return; };
+
+        shader.bind();
+        vertex_buffer.bind();
+        index_buffer.bind();
+        unsafe {
+            gl::UniformMatrix4fv(0, 1, false as _, &self.projection_matrix[0][0]);
+            gl::UniformMatrix4fv(1, 1, false as _, &self.view_matrix[0][0]);
+            gl::UniformMatrix4fv(2, 1, false as _, &model_matrix[0][0]);
+            gl::Uniform3f(3, color.x, color.y, color.z);
+            assert_eq!(index_buffer.get_count() % 3, 0);
+            gl::DrawElements(
+                gl::TRIANGLES,
+                index_buffer.get_count() as _,
+                gl::UNSIGNED_INT,
+                std::ptr::null(),
+            );
+        }
+        index_buffer.unbind();
         vertex_buffer.unbind();
         shader.unbind();
     }
