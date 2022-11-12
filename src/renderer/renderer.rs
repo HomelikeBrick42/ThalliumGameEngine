@@ -3,13 +3,12 @@ use std::pin::Pin;
 use crate::{
     math::{Matrix4x4, Vector2, Vector3},
     renderer::{
-        opengl::OpenGLRenderer, Shader, ShaderID, VertexBuffer, VertexBufferElement, VertexBufferID,
+        opengl::OpenGLRenderer, IndexBuffer, IndexBufferID, Pixels, Shader, ShaderID, Texture,
+        TextureID, VertexBuffer, VertexBufferElement, VertexBufferID,
     },
     scene::Camera,
     Window,
 };
-
-use super::{IndexBuffer, IndexBufferID};
 
 pub enum RendererAPI {
     OpenGL,
@@ -49,6 +48,11 @@ pub trait Renderer {
     fn get_index_buffer(&self, id: IndexBufferID) -> Option<&dyn IndexBuffer>;
     fn get_index_buffer_mut(&mut self, id: IndexBufferID) -> Option<&mut dyn IndexBuffer>;
 
+    fn create_texture(&mut self, size: Vector2<usize>, pixels: Pixels) -> TextureID;
+    fn destroy_texture(&mut self, id: TextureID);
+    fn get_texture(&self, id: TextureID) -> Option<&dyn Texture>;
+    fn get_texture_mut(&mut self, id: TextureID) -> Option<&mut dyn Texture>;
+
     fn resize(&mut self, size: Vector2<usize>);
     fn present(&mut self);
 
@@ -61,18 +65,23 @@ pub trait Renderer {
 }
 
 pub trait RendererDrawContext {
+    /// If `None` is passed as `texture` then a default texture of a single white pixel is used
     fn draw(
         &mut self,
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
+        texture: Option<TextureID>,
         model_matrix: Matrix4x4<f32>,
         color: Vector3<f32>,
     );
+
+    /// If `None` is passed as `texture` then a default texture of a single white pixel is used
     fn draw_indexed(
         &mut self,
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
         index_buffer: IndexBufferID,
+        texture: Option<TextureID>,
         model_matrix: Matrix4x4<f32>,
         color: Vector3<f32>,
     );

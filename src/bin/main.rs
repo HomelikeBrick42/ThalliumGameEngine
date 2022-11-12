@@ -15,107 +15,136 @@ fn main() {
     struct Vertex {
         position: Vector3<f32>,
         normal: Vector3<f32>,
+        tex_coord: Vector2<f32>,
     }
     let vertices: &[Vertex] = &[
         Vertex {
             position: (-0.5, 0.5, 0.5).into(),
             normal: (0.0, 0.0, 1.0).into(),
+            tex_coord: (0.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, 0.5, 0.5).into(),
             normal: (0.0, 0.0, 1.0).into(),
+            tex_coord: (1.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, -0.5, 0.5).into(),
             normal: (0.0, 0.0, 1.0).into(),
+            tex_coord: (1.0, 0.0).into(),
         },
         Vertex {
             position: (-0.5, -0.5, 0.5).into(),
             normal: (0.0, 0.0, 1.0).into(),
+            tex_coord: (0.0, 0.0).into(),
         },
         Vertex {
             position: (-0.5, 0.5, -0.5).into(),
             normal: (0.0, 0.0, -1.0).into(),
+            tex_coord: (0.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, 0.5, -0.5).into(),
             normal: (0.0, 0.0, -1.0).into(),
+            tex_coord: (1.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, -0.5, -0.5).into(),
             normal: (0.0, 0.0, -1.0).into(),
+            tex_coord: (1.0, 0.0).into(),
         },
         Vertex {
             position: (-0.5, -0.5, -0.5).into(),
             normal: (0.0, 0.0, -1.0).into(),
+            tex_coord: (0.0, 0.0).into(),
         },
         Vertex {
             position: (-0.5, 0.5, -0.5).into(),
             normal: (-1.0, 0.0, 0.0).into(),
+            tex_coord: (0.0, 1.0).into(),
         },
         Vertex {
             position: (-0.5, 0.5, 0.5).into(),
             normal: (-1.0, 0.0, 0.0).into(),
+            tex_coord: (1.0, 1.0).into(),
         },
         Vertex {
             position: (-0.5, -0.5, 0.5).into(),
             normal: (-1.0, 0.0, 0.0).into(),
+            tex_coord: (1.0, 0.0).into(),
         },
         Vertex {
             position: (-0.5, -0.5, -0.5).into(),
             normal: (-1.0, 0.0, 0.0).into(),
+            tex_coord: (0.0, 0.0).into(),
         },
         Vertex {
             position: (0.5, 0.5, -0.5).into(),
             normal: (1.0, 0.0, 0.0).into(),
+            tex_coord: (0.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, 0.5, 0.5).into(),
             normal: (1.0, 0.0, 0.0).into(),
+            tex_coord: (1.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, -0.5, 0.5).into(),
             normal: (1.0, 0.0, 0.0).into(),
+            tex_coord: (1.0, 0.0).into(),
         },
         Vertex {
             position: (0.5, -0.5, -0.5).into(),
             normal: (1.0, 0.0, 0.0).into(),
+            tex_coord: (0.0, 0.0).into(),
         },
         Vertex {
             position: (-0.5, 0.5, 0.5).into(),
             normal: (0.0, 1.0, 0.0).into(),
+            tex_coord: (0.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, 0.5, 0.5).into(),
             normal: (0.0, 1.0, 0.0).into(),
+            tex_coord: (1.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, 0.5, -0.5).into(),
             normal: (0.0, 1.0, 0.0).into(),
+            tex_coord: (1.0, 0.0).into(),
         },
         Vertex {
             position: (-0.5, 0.5, -0.5).into(),
             normal: (0.0, 1.0, 0.0).into(),
+            tex_coord: (0.0, 0.0).into(),
         },
         Vertex {
             position: (-0.5, -0.5, 0.5).into(),
             normal: (0.0, -1.0, 0.0).into(),
+            tex_coord: (0.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, -0.5, 0.5).into(),
             normal: (0.0, -1.0, 0.0).into(),
+            tex_coord: (1.0, 1.0).into(),
         },
         Vertex {
             position: (0.5, -0.5, -0.5).into(),
             normal: (0.0, -1.0, 0.0).into(),
+            tex_coord: (1.0, 0.0).into(),
         },
         Vertex {
             position: (-0.5, -0.5, -0.5).into(),
             normal: (0.0, -1.0, 0.0).into(),
+            tex_coord: (0.0, 0.0).into(),
         },
     ];
     let vertex_buffer = renderer.create_vertex_buffer(
-        &[VertexBufferElement::Float3, VertexBufferElement::Float3],
+        &[
+            VertexBufferElement::Float3,
+            VertexBufferElement::Float3,
+            VertexBufferElement::Float2,
+        ],
         slice_to_bytes(vertices),
     );
 
@@ -127,6 +156,24 @@ fn main() {
         16, 17, 18, 16, 18, 19, // top face
         22, 21, 20, 23, 22, 20, // bottom face
     ]);
+
+    let stars_texture = {
+        let stars = image::load_from_memory_with_format(
+            include_bytes!("./stars.png"),
+            image::ImageFormat::Png,
+        )
+        .unwrap();
+        let image = stars.into_rgba32f();
+        let size = Vector2::new(image.width() as _, image.height() as _);
+        renderer.create_texture(
+            size,
+            Pixels::RGBAF(unsafe {
+                // TODO: find a better way to do this
+                let ptr = image.as_ptr();
+                std::slice::from_raw_parts(ptr.cast(), size.x * size.y)
+            }),
+        )
+    };
 
     let mut camera = Camera {
         transform: Transform::default(),
@@ -231,8 +278,9 @@ fn main() {
                 shader,
                 vertex_buffer,
                 index_buffer,
+                Some(stars_texture),
                 cube_transform.into(),
-                (0.2, 0.8, 0.1).into(),
+                Vector3::one(),
             );
         }
         renderer.present();

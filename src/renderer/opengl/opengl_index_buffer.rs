@@ -40,11 +40,11 @@ impl OpenGLIndexBuffer {
         }
     }
 
-    pub(crate) fn bind(&self) {
+    pub(crate) fn bind(&mut self) {
         unsafe { gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.opengl_id) };
     }
 
-    pub(crate) fn unbind(&self) {
+    pub(crate) fn unbind(&mut self) {
         unsafe { gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0) };
     }
 }

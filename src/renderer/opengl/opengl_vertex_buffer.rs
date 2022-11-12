@@ -46,14 +46,14 @@ impl OpenGLVertexBuffer {
         vertex_buffer
     }
 
-    pub(crate) fn bind(&self) {
+    pub(crate) fn bind(&mut self) {
         unsafe {
             gl::BindVertexArray(self.opengl_vertex_array_id);
             gl::BindBuffer(gl::ARRAY_BUFFER, self.opengl_id);
         }
     }
 
-    pub(crate) fn unbind(&self) {
+    pub(crate) fn unbind(&mut self) {
         unsafe {
             gl::BindVertexArray(0);
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);

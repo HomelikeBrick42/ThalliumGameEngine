@@ -29,8 +29,9 @@ use windows::{
 use crate::{
     math::{Matrix4x4, Vector2, Vector3},
     renderer::{
-        opengl::OpenGLShader, opengl::OpenGLVertexBuffer, IndexBuffer, IndexBufferID, Renderer,
-        RendererDrawContext, Shader, ShaderID, VertexBuffer, VertexBufferElement, VertexBufferID,
+        opengl::{OpenGLShader, OpenGLTexture, OpenGLVertexBuffer},
+        IndexBuffer, IndexBufferID, Pixels, Renderer, RendererDrawContext, Shader, ShaderID,
+        Texture, TextureID, VertexBuffer, VertexBufferElement, VertexBufferID,
     },
     scene::Camera,
     PhantomUnsend, PhantomUnsync, Window,
@@ -46,6 +47,8 @@ pub(crate) struct OpenGLRenderer {
     shaders: HashMap<ShaderID, OpenGLShader>,
     vertex_buffers: HashMap<VertexBufferID, OpenGLVertexBuffer>,
     index_buffers: HashMap<IndexBufferID, OpenGLIndexBuffer>,
+    textures: HashMap<TextureID, OpenGLTexture>,
+    default_white_pixel: OpenGLTexture,
     _send: PhantomUnsend,
     _sync: PhantomUnsync,
 }
@@ -151,6 +154,11 @@ impl OpenGLRenderer {
             shaders: HashMap::new(),
             vertex_buffers: HashMap::new(),
             index_buffers: HashMap::new(),
+            textures: HashMap::new(),
+            default_white_pixel: OpenGLTexture::new(
+                (1, 1).into(),
+                Pixels::RGBA(&[(255, 255, 255, 255).into()]),
+            ),
             _send: PhantomData,
             _sync: PhantomData,
         }
@@ -269,6 +277,29 @@ impl Renderer for OpenGLRenderer {
             .map(|index_buffer| index_buffer as &mut dyn IndexBuffer)
     }
 
+    fn create_texture(&mut self, size: Vector2<usize>, data: Pixels) -> TextureID {
+        let texture = OpenGLTexture::new(size, data);
+        let id = texture.get_id();
+        assert!(self.textures.insert(id, texture).is_none());
+        id
+    }
+
+    fn destroy_texture(&mut self, id: TextureID) {
+        self.textures.remove(&id);
+    }
+
+    fn get_texture(&self, id: TextureID) -> Option<&dyn Texture> {
+        self.textures
+            .get(&id)
+            .map(|texture| texture as &dyn Texture)
+    }
+
+    fn get_texture_mut(&mut self, id: TextureID) -> Option<&mut dyn Texture> {
+        self.textures
+            .get_mut(&id)
+            .map(|texture| texture as &mut dyn Texture)
+    }
+
     fn resize(&mut self, size: Vector2<usize>) {
         unsafe { gl::Viewport(0, 0, size.x as _, size.y as _) }
     }
@@ -321,6 +352,7 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
         &mut self,
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
+        texture: Option<TextureID>,
         model_matrix: Matrix4x4<f32>,
         color: Vector3<f32>,
     ) {
@@ -330,13 +362,29 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
 
         shader.bind();
         vertex_buffer.bind();
+        let texture_index = 0;
+        if let Some(texture) = texture
+            .map(|id| self.renderer.textures.get_mut(&id))
+            .flatten()
+        {
+            texture.bind(texture_index);
+        } else {
+            self.renderer.default_white_pixel.bind(texture_index);
+        }
         unsafe {
             gl::UniformMatrix4fv(0, 1, false as _, &self.projection_matrix[0][0]);
             gl::UniformMatrix4fv(1, 1, false as _, &self.view_matrix[0][0]);
             gl::UniformMatrix4fv(2, 1, false as _, &model_matrix[0][0]);
             gl::Uniform3f(3, color.x, color.y, color.z);
+            gl::Uniform1ui(4, texture_index);
             assert_eq!(vertex_buffer.get_count() % 3, 0);
             gl::DrawArrays(gl::TRIANGLES, 0, vertex_buffer.get_count() as _);
+        }
+        if let Some(texture) = texture
+            .map(|id| self.renderer.textures.get_mut(&id))
+            .flatten()
+        {
+            texture.unbind();
         }
         vertex_buffer.unbind();
         shader.unbind();
@@ -347,6 +395,7 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
         index_buffer: IndexBufferID,
+        texture: Option<TextureID>,
         model_matrix: Matrix4x4<f32>,
         color: Vector3<f32>,
     ) {
@@ -358,11 +407,21 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
         shader.bind();
         vertex_buffer.bind();
         index_buffer.bind();
+        let texture_index = 0;
+        if let Some(texture) = texture
+            .map(|id| self.renderer.textures.get_mut(&id))
+            .flatten()
+        {
+            texture.bind(texture_index);
+        } else {
+            self.renderer.default_white_pixel.bind(texture_index);
+        }
         unsafe {
             gl::UniformMatrix4fv(0, 1, false as _, &self.projection_matrix[0][0]);
             gl::UniformMatrix4fv(1, 1, false as _, &self.view_matrix[0][0]);
             gl::UniformMatrix4fv(2, 1, false as _, &model_matrix[0][0]);
             gl::Uniform3f(3, color.x, color.y, color.z);
+            gl::Uniform1ui(4, texture_index);
             assert_eq!(index_buffer.get_count() % 3, 0);
             gl::DrawElements(
                 gl::TRIANGLES,
@@ -370,6 +429,12 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
                 gl::UNSIGNED_INT,
                 std::ptr::null(),
             );
+        }
+        if let Some(texture) = texture
+            .map(|id| self.renderer.textures.get_mut(&id))
+            .flatten()
+        {
+            texture.unbind();
         }
         index_buffer.unbind();
         vertex_buffer.unbind();
