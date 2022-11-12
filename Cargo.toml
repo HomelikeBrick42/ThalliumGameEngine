@@ -2,6 +2,8 @@
 name = "thallium"
 version = "0.1.0"
 edition = "2021"
+description = "A 2d and 3d game engine"
+licence = "MIT"
 
 [dependencies]
 widestring = "1.0.2"
