@@ -14,25 +14,119 @@ fn main() {
 
     struct Vertex {
         position: Vector3<f32>,
+        normal: Vector3<f32>,
     }
     let vertices: &[Vertex] = &[
         Vertex {
-            position: (-0.5, 0.5, 0.0).into(),
+            position: (-0.5, 0.5, 0.5).into(),
+            normal: (0.0, 0.0, 1.0).into(),
         },
         Vertex {
-            position: (0.5, 0.5, 0.0).into(),
+            position: (0.5, 0.5, 0.5).into(),
+            normal: (0.0, 0.0, 1.0).into(),
         },
         Vertex {
-            position: (0.5, -0.5, 0.0).into(),
+            position: (0.5, -0.5, 0.5).into(),
+            normal: (0.0, 0.0, 1.0).into(),
         },
         Vertex {
-            position: (-0.5, -0.5, 0.0).into(),
+            position: (-0.5, -0.5, 0.5).into(),
+            normal: (0.0, 0.0, 1.0).into(),
+        },
+        Vertex {
+            position: (-0.5, 0.5, -0.5).into(),
+            normal: (0.0, 0.0, -1.0).into(),
+        },
+        Vertex {
+            position: (0.5, 0.5, -0.5).into(),
+            normal: (0.0, 0.0, -1.0).into(),
+        },
+        Vertex {
+            position: (0.5, -0.5, -0.5).into(),
+            normal: (0.0, 0.0, -1.0).into(),
+        },
+        Vertex {
+            position: (-0.5, -0.5, -0.5).into(),
+            normal: (0.0, 0.0, -1.0).into(),
+        },
+        Vertex {
+            position: (-0.5, 0.5, -0.5).into(),
+            normal: (-1.0, 0.0, 0.0).into(),
+        },
+        Vertex {
+            position: (-0.5, 0.5, 0.5).into(),
+            normal: (-1.0, 0.0, 0.0).into(),
+        },
+        Vertex {
+            position: (-0.5, -0.5, 0.5).into(),
+            normal: (-1.0, 0.0, 0.0).into(),
+        },
+        Vertex {
+            position: (-0.5, -0.5, -0.5).into(),
+            normal: (-1.0, 0.0, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, 0.5, -0.5).into(),
+            normal: (1.0, 0.0, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, 0.5, 0.5).into(),
+            normal: (1.0, 0.0, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, -0.5, 0.5).into(),
+            normal: (1.0, 0.0, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, -0.5, -0.5).into(),
+            normal: (1.0, 0.0, 0.0).into(),
+        },
+        Vertex {
+            position: (-0.5, 0.5, 0.5).into(),
+            normal: (0.0, 1.0, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, 0.5, 0.5).into(),
+            normal: (0.0, 1.0, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, 0.5, -0.5).into(),
+            normal: (0.0, 1.0, 0.0).into(),
+        },
+        Vertex {
+            position: (-0.5, 0.5, -0.5).into(),
+            normal: (0.0, 1.0, 0.0).into(),
+        },
+        Vertex {
+            position: (-0.5, -0.5, 0.5).into(),
+            normal: (0.0, -1.0, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, -0.5, 0.5).into(),
+            normal: (0.0, -1.0, 0.0).into(),
+        },
+        Vertex {
+            position: (0.5, -0.5, -0.5).into(),
+            normal: (0.0, -1.0, 0.0).into(),
+        },
+        Vertex {
+            position: (-0.5, -0.5, -0.5).into(),
+            normal: (0.0, -1.0, 0.0).into(),
         },
     ];
-    let vertex_buffer =
-        renderer.create_vertex_buffer(&[VertexBufferElement::Float3], slice_to_bytes(vertices));
+    let vertex_buffer = renderer.create_vertex_buffer(
+        &[VertexBufferElement::Float3, VertexBufferElement::Float3],
+        slice_to_bytes(vertices),
+    );
 
-    let index_buffer = renderer.create_index_buffer(&[0, 1, 2, 0, 2, 3]);
+    let index_buffer = renderer.create_index_buffer(&[
+        0, 1, 2, 0, 2, 3, // front face
+        6, 5, 4, 7, 6, 4, // back face
+        8, 9, 10, 8, 10, 11, // left face
+        14, 13, 12, 15, 14, 12, // right face
+        16, 17, 18, 16, 18, 19, // top face
+        22, 21, 20, 23, 22, 20, // bottom face
+    ]);
 
     let mut camera = Camera {
         transform: Transform::default(),
@@ -47,7 +141,10 @@ fn main() {
         },
     };
 
-    const FIXED_UPDATE_INTERVAL: f32 = 1.0 / 60.0;
+    let mut cube_transform = Transform {
+        position: (0.0, 0.0, 3.0).into(),
+        ..Default::default()
+    };
 
     renderer.get_window_mut().show();
     let mut fixed_update_time = 0.0;
@@ -83,6 +180,7 @@ fn main() {
             }
         }
 
+        const FIXED_UPDATE_INTERVAL: f32 = 1.0 / 60.0;
         fixed_update_time += ts;
         while fixed_update_time > FIXED_UPDATE_INTERVAL {
             fixed_update_time -= FIXED_UPDATE_INTERVAL;
@@ -120,6 +218,10 @@ fn main() {
             if window.get_key_state(Keycode::Down) {
                 camera.transform.rotation.x -= 90.0 * ts;
             }
+
+            cube_transform.rotation.x += 30.0 * ts;
+            cube_transform.rotation.y += 40.0 * ts;
+            cube_transform.rotation.z += 25.0 * ts;
         }
 
         renderer.clear((0.2, 0.4, 0.8).into());
@@ -129,24 +231,7 @@ fn main() {
                 shader,
                 vertex_buffer,
                 index_buffer,
-                Transform {
-                    position: (1.5, 0.0, 3.0).into(),
-                    rotation: (0.0, 0.0, 0.0).into(),
-                    ..Default::default()
-                }
-                .into(),
-                (0.8, 0.2, 0.1).into(),
-            );
-            draw_context.draw_indexed(
-                shader,
-                vertex_buffer,
-                index_buffer,
-                Transform {
-                    position: (-1.5, 0.0, 3.0).into(),
-                    rotation: (45.0, 45.0, 0.0).into(),
-                    ..Default::default()
-                }
-                .into(),
+                cube_transform.into(),
                 (0.2, 0.8, 0.1).into(),
             );
         }
