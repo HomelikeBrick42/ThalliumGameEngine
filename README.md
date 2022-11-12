@@ -7,6 +7,8 @@
 This is a 2d and 3d game engine.
 It is sill very early in development so expect changes in the api.
 
+Currently it only supports OpenGL 3.3+
+
 ## Example code
 
 How to render a red traingle

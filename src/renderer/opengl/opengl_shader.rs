@@ -1,8 +1,9 @@
-use std::{marker::PhantomData, sync::atomic::AtomicUsize};
+use std::{ffi::CString, marker::PhantomData, sync::atomic::AtomicUsize};
 
 use gl::types::{GLenum, GLuint};
 
 use crate::{
+    math::{Matrix4x4, Vector3},
     renderer::{Shader, ShaderID},
     PhantomUnsend, PhantomUnsync,
 };
@@ -110,6 +111,47 @@ impl OpenGLShader {
 
     pub(crate) fn unbind(&mut self) {
         unsafe { gl::UseProgram(0) }
+    }
+
+    pub(crate) fn set_uniform_matrix(&mut self, name: &str, matrix: &Matrix4x4<f32>) -> bool {
+        unsafe {
+            let name = CString::new(name).unwrap();
+            let location = gl::GetUniformLocation(self.opengl_id, name.as_ptr());
+            if location == -1 {
+                return false;
+            }
+            gl::UniformMatrix4fv(
+                location,
+                1,
+                false as _,
+                matrix as *const Matrix4x4<f32> as _,
+            );
+            true
+        }
+    }
+
+    pub(crate) fn set_uniform_vector3(&mut self, name: &str, vector: Vector3<f32>) -> bool {
+        unsafe {
+            let name = CString::new(name).unwrap();
+            let location = gl::GetUniformLocation(self.opengl_id, name.as_ptr());
+            if location == -1 {
+                return false;
+            }
+            gl::Uniform3f(location, vector.x, vector.y, vector.z);
+            true
+        }
+    }
+
+    pub(crate) fn set_uniform_uint(&mut self, name: &str, value: u32) -> bool {
+        unsafe {
+            let name = CString::new(name).unwrap();
+            let location = gl::GetUniformLocation(self.opengl_id, name.as_ptr());
+            if location == -1 {
+                return false;
+            }
+            gl::Uniform1ui(location, value);
+            true
+        }
     }
 }
 

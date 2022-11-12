@@ -115,8 +115,8 @@ impl OpenGLRenderer {
         };
 
         let attribs = [
-            0x2091, 4, // WGL_CONTEXT_MAJOR_VERSION_ARB
-            0x2092, 4, // WGL_CONTEXT_MINOR_VERSION_ARB
+            0x2091, 3, // WGL_CONTEXT_MAJOR_VERSION_ARB
+            0x2092, 3, // WGL_CONTEXT_MINOR_VERSION_ARB
             0x9126, 1, // WGL_CONTEXT_PROFILE_MASK_ARB WGL_CONTEXT_CORE_PROFILE_BIT_ARB
             0,
         ];
@@ -372,11 +372,11 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
             self.renderer.default_white_pixel.bind(texture_index);
         }
         unsafe {
-            gl::UniformMatrix4fv(0, 1, false as _, &self.projection_matrix[0][0]);
-            gl::UniformMatrix4fv(1, 1, false as _, &self.view_matrix[0][0]);
-            gl::UniformMatrix4fv(2, 1, false as _, &model_matrix[0][0]);
-            gl::Uniform3f(3, color.x, color.y, color.z);
-            gl::Uniform1ui(4, texture_index);
+            shader.set_uniform_matrix("u_ProjectionMatrix", &self.projection_matrix);
+            shader.set_uniform_matrix("u_ViewMatrix", &self.view_matrix);
+            shader.set_uniform_matrix("u_ModelMatrix", &model_matrix);
+            shader.set_uniform_vector3("u_Color", color);
+            shader.set_uniform_uint("u_Texture", texture_index);
             assert_eq!(vertex_buffer.get_count() % 3, 0);
             gl::DrawArrays(gl::TRIANGLES, 0, vertex_buffer.get_count() as _);
         }
@@ -417,11 +417,11 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
             self.renderer.default_white_pixel.bind(texture_index);
         }
         unsafe {
-            gl::UniformMatrix4fv(0, 1, false as _, &self.projection_matrix[0][0]);
-            gl::UniformMatrix4fv(1, 1, false as _, &self.view_matrix[0][0]);
-            gl::UniformMatrix4fv(2, 1, false as _, &model_matrix[0][0]);
-            gl::Uniform3f(3, color.x, color.y, color.z);
-            gl::Uniform1ui(4, texture_index);
+            shader.set_uniform_matrix("u_ProjectionMatrix", &self.projection_matrix);
+            shader.set_uniform_matrix("u_ViewMatrix", &self.view_matrix);
+            shader.set_uniform_matrix("u_ModelMatrix", &model_matrix);
+            shader.set_uniform_vector3("u_Color", color);
+            shader.set_uniform_uint("u_Texture", texture_index);
             assert_eq!(index_buffer.get_count() % 3, 0);
             gl::DrawElements(
                 gl::TRIANGLES,

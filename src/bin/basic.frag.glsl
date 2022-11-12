@@ -1,12 +1,12 @@
-#version 440 core
+#version 330 core
 
-layout(location = 0) in vec3 v_Normal;
-layout(location = 1) in vec2 v_TexCoord;
+in vec3 v_Normal;
+in vec2 v_TexCoord;
 
-layout(location = 0) out vec4 o_Color;
+out vec4 o_Color;
 
-layout(location = 3) uniform vec3 u_Color = vec3(1.0);
-layout(location = 4) uniform sampler2D u_Texture;
+uniform vec3 u_Color = vec3(1.0);
+uniform sampler2D u_Texture;
 
 void main() {
   vec3 lightDir = normalize(vec3(0.2, -1.0, 0.4));
