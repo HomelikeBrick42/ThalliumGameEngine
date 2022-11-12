@@ -54,7 +54,8 @@ void main() {
 
         renderer.clear((0.2, 0.4, 0.8).into());
         {
-            let mut draw_context = renderer.drawing_context(Camera::default(), false);            draw_context.draw(shader, vertex_buffer, Matrix4x4::default(), Vector3::zero());
+            let mut draw_context = renderer.drawing_context(Camera::default(), false);
+            draw_context.draw(shader, vertex_buffer, Matrix4x4::default(), Vector3::zero());
         }
         renderer.present();
     }
