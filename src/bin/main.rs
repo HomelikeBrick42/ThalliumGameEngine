@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use game_engine::{math::*, renderer::*, scene::*, *};
+use thallium::{math::*, renderer::*, scene::*, *};
 
 fn main() {
     let mut renderer = Window::new((640, 480).into(), "Test").into_renderer(RendererAPI::OpenGL);
