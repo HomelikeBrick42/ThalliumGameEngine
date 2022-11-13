@@ -10,7 +10,7 @@ widestring = "1.0.2"
 lazy_static = "1.4.0"
 gl = "0.14.0"
 enum-map = "2.4.1"
-image = "0.24.5"
+stb_image = "0.2.4"
 
 [dependencies.windows]
 version = "0.43.0"

@@ -157,22 +157,20 @@ fn main() {
         22, 21, 20, 23, 22, 20, // bottom face
     ]);
 
-    let stars_texture = {
-        let stars = image::load_from_memory_with_format(
-            include_bytes!("./stars.png"),
-            image::ImageFormat::Png,
-        )
-        .unwrap();
-        let image = stars.into_rgba32f();
-        let size = Vector2::new(image.width() as _, image.height() as _);
-        renderer.create_texture(
-            size,
-            Pixels::RGBAF(unsafe {
-                // TODO: find a better way to do this
-                let ptr = image.as_ptr();
-                std::slice::from_raw_parts(ptr.cast(), size.x * size.y)
-            }),
-        )
+    let stars_texture = match stb_image::image::load_from_memory_with_depth(
+        include_bytes!("./stars.png"),
+        4,
+        false,
+    ) {
+        stb_image::image::LoadResult::Error(error) => panic!("{error}"),
+        stb_image::image::LoadResult::ImageU8(image) => {
+            let pixels = Pixels::RGBA(slice_data_cast(&image.data));
+            renderer.create_texture((image.width, image.height).into(), pixels)
+        }
+        stb_image::image::LoadResult::ImageF32(image) => {
+            let pixels = Pixels::RGBAF(slice_data_cast(&image.data));
+            renderer.create_texture((image.width, image.height).into(), pixels)
+        }
     };
 
     let mut camera = Camera {
