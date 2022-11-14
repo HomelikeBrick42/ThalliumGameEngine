@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
-use thallium::{math::*, renderer::*, scene::*, *};
+use thallium::{math::*, platform::*, renderer::*, scene::*, *};
 
 fn main() {
-    let mut renderer = Window::new((640, 480).into(), "Test").into_renderer(RendererAPI::OpenGL);
+    let mut renderer = Surface::new((640, 480).into(), "Test").into_renderer(RendererAPI::OpenGL);
 
     let shader = renderer
         .create_shader(
@@ -178,7 +178,7 @@ fn main() {
         projection_type: CameraProjectionType::Perspective {
             fov: 60.0,
             aspect: {
-                let (width, height) = renderer.get_window().get_size().into();
+                let (width, height) = renderer.get_surface().get_size().into();
                 width as f32 / height as f32
             },
             near: 0.001,
@@ -191,7 +191,7 @@ fn main() {
         ..Default::default()
     };
 
-    renderer.get_window_mut().show();
+    renderer.get_surface_mut().show();
     let mut fixed_update_time = 0.0;
     let mut last_now = std::time::Instant::now();
     'main_loop: loop {
@@ -199,10 +199,10 @@ fn main() {
         let ts = now.duration_since(last_now).as_secs_f32();
         last_now = now;
 
-        for event in renderer.get_window_mut().events() {
+        for event in renderer.get_surface_mut().events() {
             match event {
-                WindowEvent::Close => break 'main_loop,
-                WindowEvent::Resize(size) => {
+                SurfaceEvent::Close => break 'main_loop,
+                SurfaceEvent::Resize(size) => {
                     renderer.resize(size);
                     let aspect_ratio = size.x as f32 / size.y as f32;
                     match &mut camera.projection_type {
@@ -220,8 +220,8 @@ fn main() {
                         CameraProjectionType::Perspective { aspect, .. } => *aspect = aspect_ratio,
                     }
                 }
-                WindowEvent::KeyPressed(_) => {}
-                WindowEvent::KeyReleased(_) => {}
+                SurfaceEvent::KeyPressed(_) => {}
+                SurfaceEvent::KeyReleased(_) => {}
             }
         }
 
@@ -231,36 +231,36 @@ fn main() {
             fixed_update_time -= FIXED_UPDATE_INTERVAL;
             let ts = FIXED_UPDATE_INTERVAL;
 
-            let window = renderer.get_window();
-            if window.get_key_state(Keycode::W) {
+            let surface = renderer.get_surface();
+            if surface.get_key_state(Keycode::W) {
                 camera.transform.position += camera.transform.forward() * Vector3::from(2.0 * ts);
             }
-            if window.get_key_state(Keycode::S) {
+            if surface.get_key_state(Keycode::S) {
                 camera.transform.position -= camera.transform.forward() * Vector3::from(2.0 * ts);
             }
-            if window.get_key_state(Keycode::A) {
+            if surface.get_key_state(Keycode::A) {
                 camera.transform.position -= camera.transform.right() * Vector3::from(2.0 * ts);
             }
-            if window.get_key_state(Keycode::D) {
+            if surface.get_key_state(Keycode::D) {
                 camera.transform.position += camera.transform.right() * Vector3::from(2.0 * ts);
             }
-            if window.get_key_state(Keycode::Q) {
+            if surface.get_key_state(Keycode::Q) {
                 camera.transform.position -= camera.transform.up() * Vector3::from(2.0 * ts);
             }
-            if window.get_key_state(Keycode::E) {
+            if surface.get_key_state(Keycode::E) {
                 camera.transform.position += camera.transform.up() * Vector3::from(2.0 * ts);
             }
 
-            if window.get_key_state(Keycode::Left) {
+            if surface.get_key_state(Keycode::Left) {
                 camera.transform.rotation.y -= 90.0 * ts;
             }
-            if window.get_key_state(Keycode::Right) {
+            if surface.get_key_state(Keycode::Right) {
                 camera.transform.rotation.y += 90.0 * ts;
             }
-            if window.get_key_state(Keycode::Up) {
+            if surface.get_key_state(Keycode::Up) {
                 camera.transform.rotation.x += 90.0 * ts;
             }
-            if window.get_key_state(Keycode::Down) {
+            if surface.get_key_state(Keycode::Down) {
                 camera.transform.rotation.x -= 90.0 * ts;
             }
 
@@ -283,5 +283,5 @@ fn main() {
         }
         renderer.present();
     }
-    renderer.get_window_mut().hide();
+    renderer.get_surface_mut().hide();
 }

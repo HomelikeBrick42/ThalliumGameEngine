@@ -28,21 +28,25 @@ use windows::{
 
 use crate::{
     math::{Matrix4x4, Vector2, Vector3},
+    platform::Surface,
     renderer::{
         opengl::{OpenGLShader, OpenGLTexture, OpenGLVertexBuffer},
         IndexBuffer, IndexBufferID, Pixels, Renderer, RendererDrawContext, Shader, ShaderID,
         Texture, TextureID, VertexBuffer, VertexBufferElement, VertexBufferID,
     },
     scene::Camera,
-    PhantomUnsend, PhantomUnsync, Window,
+    PhantomUnsend, PhantomUnsync,
 };
 
 use super::OpenGLIndexBuffer;
 
 pub(crate) struct OpenGLRenderer {
-    window: Option<Pin<Box<Window>>>,
+    surface: Option<Pin<Box<Surface>>>,
+    #[cfg(target_os = "windows")]
     opengl_library: HINSTANCE,
+    #[cfg(target_os = "windows")]
     device_context: HDC,
+    #[cfg(target_os = "windows")]
     opengl_context: HGLRC,
     shaders: HashMap<ShaderID, OpenGLShader>,
     vertex_buffers: HashMap<VertexBufferID, OpenGLVertexBuffer>,
@@ -57,8 +61,9 @@ lazy_static! {
     static ref CONTEXT_CREATED: AtomicBool = AtomicBool::new(false);
 }
 
+#[cfg(target_os = "windows")]
 impl OpenGLRenderer {
-    pub(crate) fn new(window: Pin<Box<Window>>) -> OpenGLRenderer {
+    pub(crate) fn new(surface: Pin<Box<Surface>>) -> OpenGLRenderer {
         if CONTEXT_CREATED.swap(true, std::sync::atomic::Ordering::AcqRel) {
             panic!(
                 "Can only create 1 opengl context at a time, current limitation of the gl crate"
@@ -68,7 +73,7 @@ impl OpenGLRenderer {
         let dll_name = U16CString::from_str("opengl32.dll").unwrap();
         let opengl_library = unsafe { LoadLibraryW(PCWSTR(dll_name.as_ptr())) }.unwrap();
 
-        let device_context = unsafe { GetDC(window.window_handle) };
+        let device_context = unsafe { GetDC(surface.window_handle) };
         if device_context == HDC::default() {
             panic!("Failed to get device context");
         }
@@ -147,7 +152,7 @@ impl OpenGLRenderer {
         });
 
         OpenGLRenderer {
-            window: Some(window),
+            surface: Some(surface),
             opengl_library,
             device_context,
             opengl_context,
@@ -182,24 +187,24 @@ impl OpenGLRenderer {
 
 impl Drop for OpenGLRenderer {
     fn drop(&mut self) {
-        if self.window.is_some() {
+        if self.surface.is_some() {
             self.destroy();
         }
     }
 }
 
 impl Renderer for OpenGLRenderer {
-    fn get_window(&self) -> &Window {
-        self.window.as_ref().unwrap()
+    fn get_surface(&self) -> &Surface {
+        self.surface.as_ref().unwrap()
     }
 
-    fn get_window_mut(&mut self) -> &mut Window {
-        self.window.as_mut().unwrap()
+    fn get_surface_mut(&mut self) -> &mut Surface {
+        self.surface.as_mut().unwrap()
     }
 
-    fn take_window(mut self) -> Pin<Box<Window>> {
+    fn take_surface(mut self) -> Pin<Box<Surface>> {
         self.destroy();
-        self.window.take().unwrap()
+        self.surface.take().unwrap()
     }
 
     fn create_shader(

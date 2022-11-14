@@ -1,10 +1,7 @@
 pub mod math;
+pub mod platform;
 pub mod renderer;
 pub mod scene;
-
-mod window;
-
-pub use window::*;
 
 pub type PhantomUnsync = std::marker::PhantomData<std::cell::Cell<()>>;
 pub type PhantomUnsend = std::marker::PhantomData<std::sync::MutexGuard<'static, ()>>;

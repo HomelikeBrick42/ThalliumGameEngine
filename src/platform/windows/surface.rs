@@ -4,7 +4,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
-use enum_map::{Enum, EnumMap};
+use enum_map::EnumMap;
 use widestring::U16CString;
 use windows::{
     core::PCWSTR,
@@ -33,74 +33,21 @@ use windows::{
 
 use crate::{
     math::Vector2,
+    platform::{Keycode, SurfaceEvent},
     renderer::{new_renderer, Renderer, RendererAPI},
 };
 
-pub enum WindowEvent {
-    Close,
-    Resize(Vector2<usize>),
-    KeyPressed(Keycode),
-    KeyReleased(Keycode),
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Enum)]
-pub enum Keycode {
-    Num0,
-    Num1,
-    Num2,
-    Num3,
-    Num4,
-    Num5,
-    Num6,
-    Num7,
-    Num8,
-    Num9,
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-    H,
-    I,
-    J,
-    K,
-    L,
-    M,
-    N,
-    O,
-    P,
-    Q,
-    R,
-    S,
-    T,
-    U,
-    V,
-    W,
-    X,
-    Y,
-    Z,
-    Left,
-    Up,
-    Right,
-    Down,
-    Control,
-    Shift,
-    Alt,
-}
-
-pub struct Window {
+pub struct Surface {
     instance: HINSTANCE,
     window_class_name: U16CString,
     size: Vector2<usize>,
     pub(crate) window_handle: HWND,
-    events: Vec<WindowEvent>,
+    events: Vec<SurfaceEvent>,
     key_states: EnumMap<Keycode, bool>,
 }
 
-impl Window {
-    pub fn new(size: Vector2<usize>, title: &str) -> Pin<Box<Window>> {
+impl Surface {
+    pub fn new(size: Vector2<usize>, title: &str) -> Pin<Box<Surface>> {
         let instance = unsafe { GetModuleHandleW(PCWSTR::null()) }.unwrap();
 
         let window_class_name = {
@@ -142,7 +89,7 @@ impl Window {
         let width = (rect.right - rect.left) as usize;
         let height = (rect.bottom - rect.top) as usize;
 
-        let mut window = Pin::new(Box::new(Window {
+        let mut surface = Pin::new(Box::new(Surface {
             instance,
             window_class_name,
             size,
@@ -152,10 +99,10 @@ impl Window {
         }));
 
         let window_title = U16CString::from_str(title).unwrap();
-        window.window_handle = unsafe {
+        surface.window_handle = unsafe {
             CreateWindowExW(
                 window_style_ex,
-                PCWSTR(window.window_class_name.as_ptr()),
+                PCWSTR(surface.window_class_name.as_ptr()),
                 PCWSTR(window_title.as_ptr()),
                 window_style,
                 CW_USEDEFAULT,
@@ -164,15 +111,15 @@ impl Window {
                 height as _,
                 HWND::default(),
                 HMENU::default(),
-                window.instance,
-                Some(&window as &Window as *const _ as _),
+                surface.instance,
+                Some(&surface as &Surface as *const _ as _),
             )
         };
-        if window.window_handle == HWND::default() {
+        if surface.window_handle == HWND::default() {
             panic!("Failed to create window");
         }
 
-        window
+        surface
     }
 
     pub fn show(&mut self) {
@@ -190,7 +137,7 @@ impl Window {
         self.key_states[key]
     }
 
-    pub fn events(&mut self) -> impl Iterator<Item = WindowEvent> {
+    pub fn events(&mut self) -> impl Iterator<Item = SurfaceEvent> {
         unsafe {
             let mut message = MSG::default();
             while PeekMessageW(&mut message, self.window_handle, 0, 0, PM_REMOVE) != false {
@@ -201,12 +148,12 @@ impl Window {
         }
     }
 
-    pub fn into_renderer(self: Pin<Box<Window>>, api: RendererAPI) -> Box<dyn Renderer> {
+    pub fn into_renderer(self: Pin<Box<Surface>>, api: RendererAPI) -> Box<dyn Renderer> {
         new_renderer(self, api)
     }
 }
 
-impl Drop for Window {
+impl Drop for Surface {
     fn drop(&mut self) {
         unsafe {
             if DestroyWindow(self.window_handle) == false {
@@ -235,23 +182,23 @@ unsafe extern "system" fn window_message_callback(
         return DefWindowProcW(hwnd, message, w_param, l_param);
     }
 
-    let window: *mut Window = std::mem::transmute(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
-    if window.is_null() {
+    let surface: *mut Surface = std::mem::transmute(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    if surface.is_null() {
         return DefWindowProcW(hwnd, message, w_param, l_param);
     }
-    let window = &mut *window;
+    let surface = &mut *surface;
 
     let mut result = LRESULT::default();
     match message {
-        WM_QUIT | WM_CLOSE => window.events.push(WindowEvent::Close),
+        WM_QUIT | WM_CLOSE => surface.events.push(SurfaceEvent::Close),
         WM_SIZE => {
             let mut rect = RECT::default();
             GetClientRect(hwnd, &mut rect);
             let width = rect.right - rect.left;
             let height = rect.bottom - rect.top;
             if width > 0 && height > 0 {
-                window.size = (width as _, height as _).into();
-                window.events.push(WindowEvent::Resize(window.size));
+                surface.size = (width as _, height as _).into();
+                surface.events.push(SurfaceEvent::Resize(surface.size));
             }
         }
         WM_KEYDOWN | WM_KEYUP | WM_SYSKEYDOWN | WM_SYSKEYUP => 'key_handling: {
@@ -302,13 +249,13 @@ unsafe extern "system" fn window_message_callback(
                 VK_LMENU => Keycode::Alt,
                 _ => break 'key_handling,
             };
-            window.key_states[keycode] = pressed;
-            window.events.extend(
+            surface.key_states[keycode] = pressed;
+            surface.events.extend(
                 std::iter::repeat_with(|| {
                     if pressed {
-                        WindowEvent::KeyPressed(keycode)
+                        SurfaceEvent::KeyPressed(keycode)
                     } else {
-                        WindowEvent::KeyReleased(keycode)
+                        SurfaceEvent::KeyReleased(keycode)
                     }
                 })
                 .take((l_param.0 & 0xFF) as _),

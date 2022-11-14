@@ -2,28 +2,28 @@ use std::pin::Pin;
 
 use crate::{
     math::{Matrix4x4, Vector2, Vector3},
+    platform::Surface,
     renderer::{
         opengl::OpenGLRenderer, IndexBuffer, IndexBufferID, Pixels, Shader, ShaderID, Texture,
         TextureID, VertexBuffer, VertexBufferElement, VertexBufferID,
     },
     scene::Camera,
-    Window,
 };
 
 pub enum RendererAPI {
     OpenGL,
 }
 
-pub(crate) fn new_renderer(window: Pin<Box<Window>>, api: RendererAPI) -> Box<dyn Renderer> {
+pub(crate) fn new_renderer(surface: Pin<Box<Surface>>, api: RendererAPI) -> Box<dyn Renderer> {
     match api {
-        RendererAPI::OpenGL => Box::new(OpenGLRenderer::new(window)),
+        RendererAPI::OpenGL => Box::new(OpenGLRenderer::new(surface)),
     }
 }
 
 pub trait Renderer {
-    fn get_window(&self) -> &Window;
-    fn get_window_mut(&mut self) -> &mut Window;
-    fn take_window(self) -> Pin<Box<Window>>;
+    fn get_surface(&self) -> &Surface;
+    fn get_surface_mut(&mut self) -> &mut Surface;
+    fn take_surface(self) -> Pin<Box<Surface>>;
 
     fn create_shader(
         &mut self,

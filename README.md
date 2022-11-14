@@ -14,10 +14,10 @@ Currently it only supports OpenGL 3.3+
 How to render a red traingle
 
 ```rust
-use thallium::{math::*, renderer::*, scene::*, *};
+use thallium::{math::*, platform::*, renderer::*, scene::*, *};
 
 fn main() {
-    let mut renderer = Window::new((640, 480).into(), "Test").into_renderer(RendererAPI::OpenGL);
+    let mut renderer = Surface::new((640, 480).into(), "Test").into_renderer(RendererAPI::OpenGL);
 
     let shader = renderer.create_shader(
         r"#version 330 core
@@ -44,12 +44,12 @@ void main() {
         slice_to_bytes(vertices),
     );
 
-    renderer.get_window_mut().show();
+    renderer.get_surface_mut().show();
     'main_loop: loop {
-        for event in renderer.get_window_mut().events() {
+        for event in renderer.get_surface_mut().events() {
             match event {
-                WindowEvent::Close => break 'main_loop,
-                WindowEvent::Resize(size) => renderer.resize(size),
+                SurfaceEvent::Close => break 'main_loop,
+                SurfaceEvent::Resize(size) => renderer.resize(size),
                 _ => {}
             }
         }
@@ -61,6 +61,6 @@ void main() {
         }
         renderer.present();
     }
-    renderer.get_window_mut().hide();
+    renderer.get_surface_mut().hide();
 }
 ```
