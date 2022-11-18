@@ -64,10 +64,16 @@ pub trait Renderer {
     ) -> Box<dyn RendererDrawContext + 'a>;
 }
 
+pub enum PrimitiveType {
+    Triangle,
+    TriangleStrip,
+}
+
 pub trait RendererDrawContext {
     /// If `None` is passed as `texture` then a default texture of a single white pixel is used
     fn draw(
         &mut self,
+        typ: PrimitiveType,
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
         texture: Option<TextureID>,
@@ -78,6 +84,7 @@ pub trait RendererDrawContext {
     /// If `None` is passed as `texture` then a default texture of a single white pixel is used
     fn draw_indexed(
         &mut self,
+        typ: PrimitiveType,
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
         index_buffer: IndexBufferID,

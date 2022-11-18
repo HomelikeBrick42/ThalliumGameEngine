@@ -164,11 +164,11 @@ fn main() {
     ) {
         stb_image::image::LoadResult::Error(error) => panic!("{error}"),
         stb_image::image::LoadResult::ImageU8(image) => {
-            let pixels = Pixels::RGBA(slice_data_cast(&image.data));
+            let pixels = Pixels::RGBA(unsafe { slice_data_cast(&image.data) });
             renderer.create_texture((image.width, image.height).into(), pixels)
         }
         stb_image::image::LoadResult::ImageF32(image) => {
-            let pixels = Pixels::RGBAF(slice_data_cast(&image.data));
+            let pixels = Pixels::RGBAF(unsafe { slice_data_cast(&image.data) });
             renderer.create_texture((image.width, image.height).into(), pixels)
         }
     };
@@ -273,6 +273,7 @@ fn main() {
         {
             let mut draw_context = renderer.drawing_context(camera, true);
             draw_context.draw_indexed(
+                PrimitiveType::Triangle,
                 shader,
                 vertex_buffer,
                 index_buffer,

@@ -5,7 +5,7 @@
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/HomelikeBrick42/thallium/master/LICENSE)
 
 This is a 2d and 3d game engine.
-It is sill very early in development so expect changes in the api.
+It is still very early in development so expect changes in the api.
 
 Currently it only supports OpenGL 3.3+
 
@@ -57,7 +57,7 @@ void main() {
         renderer.clear((0.2, 0.4, 0.8).into());
         {
             let mut draw_context = renderer.drawing_context(Camera::default(), false);
-            draw_context.draw(shader, vertex_buffer, Matrix4x4::default(), Vector3::zero());
+            draw_context.draw(PrimitiveType::Triangle, shader, vertex_buffer, Matrix4x4::default(), Vector3::zero());
         }
         renderer.present();
     }

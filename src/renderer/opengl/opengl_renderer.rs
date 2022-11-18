@@ -31,8 +31,8 @@ use crate::{
     platform::Surface,
     renderer::{
         opengl::{OpenGLShader, OpenGLTexture, OpenGLVertexBuffer},
-        IndexBuffer, IndexBufferID, Pixels, Renderer, RendererDrawContext, Shader, ShaderID,
-        Texture, TextureID, VertexBuffer, VertexBufferElement, VertexBufferID,
+        IndexBuffer, IndexBufferID, Pixels, PrimitiveType, Renderer, RendererDrawContext, Shader,
+        ShaderID, Texture, TextureID, VertexBuffer, VertexBufferElement, VertexBufferID,
     },
     scene::Camera,
     PhantomUnsend, PhantomUnsync,
@@ -355,6 +355,7 @@ pub struct OpenGLRendererDrawContext<'a> {
 impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
     fn draw(
         &mut self,
+        typ: PrimitiveType,
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
         texture: Option<TextureID>,
@@ -382,8 +383,18 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
             shader.set_uniform_matrix("u_ModelMatrix", &model_matrix);
             shader.set_uniform_vector3("u_Color", color);
             shader.set_uniform_uint("u_Texture", texture_index);
-            assert_eq!(vertex_buffer.get_count() % 3, 0);
-            gl::DrawArrays(gl::TRIANGLES, 0, vertex_buffer.get_count() as _);
+            let typ = match typ {
+                PrimitiveType::Triangle => {
+                    assert_eq!(vertex_buffer.get_count() % 3, 0);
+                    gl::TRIANGLES
+                }
+                PrimitiveType::TriangleStrip => {
+                    let count = vertex_buffer.get_count();
+                    assert!(count == 0 || count >= 3);
+                    gl::TRIANGLE_STRIP
+                }
+            };
+            gl::DrawArrays(typ, 0, vertex_buffer.get_count() as _);
         }
         if let Some(texture) = texture
             .map(|id| self.renderer.textures.get_mut(&id))
@@ -397,6 +408,7 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
 
     fn draw_indexed(
         &mut self,
+        typ: PrimitiveType,
         shader: ShaderID,
         vertex_buffer: VertexBufferID,
         index_buffer: IndexBufferID,
@@ -427,9 +439,19 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
             shader.set_uniform_matrix("u_ModelMatrix", &model_matrix);
             shader.set_uniform_vector3("u_Color", color);
             shader.set_uniform_uint("u_Texture", texture_index);
-            assert_eq!(index_buffer.get_count() % 3, 0);
+            let typ = match typ {
+                PrimitiveType::Triangle => {
+                    assert_eq!(vertex_buffer.get_count() % 3, 0);
+                    gl::TRIANGLES
+                }
+                PrimitiveType::TriangleStrip => {
+                    let count = vertex_buffer.get_count();
+                    assert!(count == 0 || count >= 3);
+                    gl::TRIANGLE_STRIP
+                }
+            };
             gl::DrawElements(
-                gl::TRIANGLES,
+                typ,
                 index_buffer.get_count() as _,
                 gl::UNSIGNED_INT,
                 std::ptr::null(),
