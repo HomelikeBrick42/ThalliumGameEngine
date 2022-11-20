@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    ffi::{c_void, CString},
+    ffi::{c_void, CStr, CString},
     marker::PhantomData,
     mem::size_of,
     pin::Pin,
@@ -150,6 +150,37 @@ impl OpenGLRenderer {
             }
             ptr
         });
+
+        unsafe {
+            extern "system" fn message_callback(
+                _source: u32,
+                _typ: u32,
+                _id: u32,
+                _severity: u32,
+                _length: i32,
+                message: *const i8,
+                _user_param: *mut c_void,
+            ) {
+                let str = unsafe { CStr::from_ptr(message) }.to_str().unwrap();
+                if cfg!(debug_assertions) {
+                    panic!("{str}");
+                } else {
+                    eprintln!("{str}");
+                }
+            }
+
+            gl::Enable(gl::DEBUG_OUTPUT);
+            gl::Enable(gl::DEBUG_OUTPUT_SYNCHRONOUS);
+            gl::DebugMessageCallback(Some(message_callback), std::ptr::null());
+            gl::DebugMessageControl(
+                gl::DONT_CARE,
+                gl::DONT_CARE,
+                gl::DEBUG_SEVERITY_NOTIFICATION,
+                0,
+                std::ptr::null(),
+                false as _,
+            );
+        }
 
         OpenGLRenderer {
             surface: Some(surface),
@@ -382,7 +413,7 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
             shader.set_uniform_matrix("u_ViewMatrix", &self.view_matrix);
             shader.set_uniform_matrix("u_ModelMatrix", &model_matrix);
             shader.set_uniform_vector3("u_Color", color);
-            shader.set_uniform_uint("u_Texture", texture_index);
+            shader.set_uniform_int("u_Texture", texture_index as i32);
             let typ = match typ {
                 PrimitiveType::Triangle => {
                     assert_eq!(vertex_buffer.get_count() % 3, 0);
@@ -438,7 +469,7 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
             shader.set_uniform_matrix("u_ViewMatrix", &self.view_matrix);
             shader.set_uniform_matrix("u_ModelMatrix", &model_matrix);
             shader.set_uniform_vector3("u_Color", color);
-            shader.set_uniform_uint("u_Texture", texture_index);
+            shader.set_uniform_int("u_Texture", texture_index as i32);
             let typ = match typ {
                 PrimitiveType::Triangle => {
                     assert_eq!(vertex_buffer.get_count() % 3, 0);

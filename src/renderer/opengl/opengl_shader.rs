@@ -142,14 +142,14 @@ impl OpenGLShader {
         }
     }
 
-    pub(crate) fn set_uniform_uint(&mut self, name: &str, value: u32) -> bool {
+    pub(crate) fn set_uniform_int(&mut self, name: &str, value: i32) -> bool {
         unsafe {
             let name = CString::new(name).unwrap();
             let location = gl::GetUniformLocation(self.opengl_id, name.as_ptr());
             if location == -1 {
                 return false;
             }
-            gl::Uniform1ui(location, value);
+            gl::Uniform1i(location, value);
             true
         }
     }
