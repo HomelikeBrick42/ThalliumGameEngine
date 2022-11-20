@@ -1,6 +1,13 @@
+#[allow(unused_imports)]
+use std::{marker::PhantomData, pin::Pin};
+
 use enum_map::Enum;
 
-use crate::math::Vector2;
+#[allow(unused_imports)]
+use crate::{
+    math::Vector2,
+    renderer::{new_renderer, Renderer, RendererAPI},
+};
 
 pub enum SurfaceEvent {
     Close,
@@ -58,3 +65,36 @@ pub enum Keycode {
 
 #[cfg(target_os = "windows")]
 pub use crate::platform::windows::*;
+
+#[cfg(not(target_os = "windows"))]
+pub struct Surface(PhantomData<()>);
+
+#[cfg(not(target_os = "windows"))]
+impl Surface {
+    pub fn new(_size: Vector2<usize>, _title: &str) -> Pin<Box<Surface>> {
+        unimplemented!()
+    }
+
+    pub fn show(&mut self) {
+        unimplemented!()
+    }
+    pub fn hide(&mut self) {
+        unimplemented!()
+    }
+
+    pub fn get_size(&self) -> Vector2<usize> {
+        unimplemented!()
+    }
+
+    pub fn get_key_state(&self, _key: Keycode) -> bool {
+        unimplemented!()
+    }
+
+    pub fn events(&mut self) -> impl Iterator<Item = SurfaceEvent> {
+        std::iter::empty()
+    }
+
+    pub fn into_renderer(self: Pin<Box<Surface>>, api: RendererAPI) -> Box<dyn Renderer> {
+        new_renderer(self, api)
+    }
+}

@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use std::{
     collections::HashMap,
     ffi::{c_void, CStr, CString},
@@ -8,7 +9,9 @@ use std::{
 };
 
 use lazy_static::lazy_static;
+#[cfg(windows)]
 use widestring::U16CString;
+#[cfg(windows)]
 use windows::{
     core::{PCSTR, PCWSTR},
     Win32::{
@@ -216,6 +219,17 @@ impl OpenGLRenderer {
     }
 }
 
+#[cfg(not(target_os = "windows"))]
+impl OpenGLRenderer {
+    pub(crate) fn new(_surface: Pin<Box<Surface>>) -> OpenGLRenderer {
+        unimplemented!()
+    }
+
+    fn destroy(&mut self) {
+        unimplemented!()
+    }
+}
+
 impl Drop for OpenGLRenderer {
     fn drop(&mut self) {
         if self.surface.is_some() {
@@ -341,7 +355,10 @@ impl Renderer for OpenGLRenderer {
     }
 
     fn present(&mut self) {
-        unsafe { SwapBuffers(self.device_context) };
+        #[cfg(target_os = "windows")]
+        unsafe {
+            SwapBuffers(self.device_context);
+        }
     }
 
     fn clear(&mut self, color: Vector3<f32>) {
