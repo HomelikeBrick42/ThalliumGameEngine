@@ -220,8 +220,15 @@ fn main() {
                         CameraProjectionType::Perspective { aspect, .. } => *aspect = aspect_ratio,
                     }
                 }
-                SurfaceEvent::KeyPressed(_) => {}
-                SurfaceEvent::KeyReleased(_) => {}
+                SurfaceEvent::KeyPressed(key) => println!("{key:?} was pressed"),
+                SurfaceEvent::KeyReleased(key) => println!("{key:?} was released"),
+                SurfaceEvent::MousePressed(button, coord) => {
+                    println!("{button:?} mouse button was pressed at {coord}")
+                }
+                SurfaceEvent::MouseReleased(button, coord) => {
+                    println!("{button:?} mouse button was released at {coord}")
+                }
+                SurfaceEvent::MouseMoved(coord) => println!("Mouse was moved to {coord}"),
             }
         }
 

@@ -1,6 +1,6 @@
 [package]
 name = "thallium"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 description = "A 2d and 3d game engine"
 license-file = "LICENCE"
@@ -15,7 +15,7 @@ stb_image = "0.2.4"
 widestring = "1.0.2"
 
 [target.'cfg(windows)'.dependencies.windows]
-version = "0.43.0"
+version = "0.44.0"
 features = [
     "Win32_Foundation",
     "Win32_Graphics_Gdi",

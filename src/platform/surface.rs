@@ -14,6 +14,16 @@ pub enum SurfaceEvent {
     Resize(Vector2<usize>),
     KeyPressed(Keycode),
     KeyReleased(Keycode),
+    MousePressed(MouseButton, Vector2<isize>),
+    MouseReleased(MouseButton, Vector2<isize>),
+    MouseMoved(Vector2<isize>),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Enum)]
+pub enum MouseButton {
+    Left,
+    Middle,
+    Right,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Enum)]
@@ -87,6 +97,14 @@ impl Surface {
     }
 
     pub fn get_key_state(&self, _key: Keycode) -> bool {
+        unimplemented!()
+    }
+
+    pub fn get_mouse_button_state(&self, _button: MouseButton) -> bool {
+        unimplemented!()
+    }
+
+    pub fn get_mouse_position(&self) -> Vector2<isize> {
         unimplemented!()
     }
 

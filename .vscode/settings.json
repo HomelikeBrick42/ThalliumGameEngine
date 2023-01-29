@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.shader": "glsl",
+        "windows.h": "c",
+        "windowsx.h": "c",
+        "*.rh": "c"
+    }
+}

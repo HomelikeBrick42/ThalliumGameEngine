@@ -24,8 +24,9 @@ use windows::{
                 RegisterClassExW, SetWindowLongPtrW, ShowWindow, TranslateMessage,
                 UnregisterClassW, CREATESTRUCTW, CS_OWNDC, CW_USEDEFAULT, GWLP_USERDATA, HMENU,
                 IDC_ARROW, MSG, PM_REMOVE, SW_HIDE, SW_SHOW, WINDOW_EX_STYLE, WM_CLOSE, WM_KEYDOWN,
-                WM_KEYUP, WM_NCCREATE, WM_QUIT, WM_SIZE, WM_SYSKEYDOWN, WM_SYSKEYUP, WNDCLASSEXW,
-                WS_OVERLAPPEDWINDOW,
+                WM_KEYUP, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MBUTTONDOWN, WM_MBUTTONUP, WM_MOUSEMOVE,
+                WM_NCCREATE, WM_QUIT, WM_RBUTTONDOWN, WM_RBUTTONUP, WM_SIZE, WM_SYSKEYDOWN,
+                WM_SYSKEYUP, WNDCLASSEXW, WS_OVERLAPPEDWINDOW,
             },
         },
     },
@@ -33,7 +34,7 @@ use windows::{
 
 use crate::{
     math::Vector2,
-    platform::{Keycode, SurfaceEvent},
+    platform::{Keycode, MouseButton, SurfaceEvent},
     renderer::{new_renderer, Renderer, RendererAPI},
 };
 
@@ -44,6 +45,8 @@ pub struct Surface {
     pub(crate) window_handle: HWND,
     events: Vec<SurfaceEvent>,
     key_states: EnumMap<Keycode, bool>,
+    mouse_button_states: EnumMap<MouseButton, bool>,
+    mouse_position: Vector2<isize>,
 }
 
 impl Surface {
@@ -96,6 +99,8 @@ impl Surface {
             window_handle: HWND::default(),
             events: vec![],
             key_states: EnumMap::default(),
+            mouse_button_states: EnumMap::default(),
+            mouse_position: (0, 0).into(),
         }));
 
         let window_title = U16CString::from_str(title).unwrap();
@@ -135,6 +140,14 @@ impl Surface {
 
     pub fn get_key_state(&self, key: Keycode) -> bool {
         self.key_states[key]
+    }
+
+    pub fn get_mouse_button_state(&self, button: MouseButton) -> bool {
+        self.mouse_button_states[button]
+    }
+
+    pub fn get_mouse_position(&self) -> Vector2<isize> {
+        self.mouse_position
     }
 
     pub fn events(&mut self) -> impl Iterator<Item = SurfaceEvent> {
@@ -252,14 +265,48 @@ unsafe extern "system" fn window_message_callback(
             surface.key_states[keycode] = pressed;
             surface.events.extend(
                 std::iter::repeat_with(|| {
-                    if pressed {
-                        SurfaceEvent::KeyPressed(keycode)
+                    (if pressed {
+                        SurfaceEvent::KeyPressed
                     } else {
-                        SurfaceEvent::KeyReleased(keycode)
-                    }
+                        SurfaceEvent::KeyReleased
+                    })(keycode)
                 })
                 .take((l_param.0 & 0xFF) as _),
             );
+        }
+        WM_LBUTTONDOWN | WM_LBUTTONUP | WM_MBUTTONDOWN | WM_MBUTTONUP | WM_RBUTTONDOWN
+        | WM_RBUTTONUP => 'mouse_button_handling: {
+            let pressed =
+                message == WM_LBUTTONDOWN || message == WM_MBUTTONDOWN || message == WM_RBUTTONDOWN;
+            let key = match message {
+                WM_LBUTTONDOWN | WM_LBUTTONUP => MouseButton::Left,
+                WM_MBUTTONDOWN | WM_MBUTTONUP => MouseButton::Middle,
+                WM_RBUTTONDOWN | WM_RBUTTONUP => MouseButton::Right,
+                _ => break 'mouse_button_handling,
+            };
+            let (x, y) = {
+                let coord = l_param.0;
+                let coords: [i16; std::mem::size_of::<isize>() / std::mem::size_of::<i16>()] =
+                    std::mem::transmute(coord);
+                (coords[0] as _, coords[1] as _)
+            };
+            surface.mouse_button_states[key] = pressed;
+            surface.mouse_position = (x, y).into();
+            surface.events.push(if pressed {
+                SurfaceEvent::MousePressed
+            } else {
+                SurfaceEvent::MouseReleased
+            }(key, (x, y).into()));
+        }
+        WM_MOUSEMOVE => {
+            let (x, y) = {
+                let coord = l_param.0;
+                let coords: [i16; std::mem::size_of::<isize>() / std::mem::size_of::<i16>()] =
+                    std::mem::transmute(coord);
+                (coords[0] as _, coords[1] as _)
+            };
+            surface.mouse_position = (x, y).into();
+            surface.events.push(SurfaceEvent::MouseMoved((x, y).into()));
         }
         _ => result = DefWindowProcW(hwnd, message, w_param, l_param),
     }
