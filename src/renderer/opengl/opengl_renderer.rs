@@ -489,11 +489,11 @@ impl<'a> RendererDrawContext for OpenGLRendererDrawContext<'a> {
             shader.set_uniform_int("u_Texture", texture_index as i32);
             let typ = match typ {
                 PrimitiveType::Triangle => {
-                    assert_eq!(vertex_buffer.get_count() % 3, 0);
+                    assert_eq!(index_buffer.get_count() % 3, 0);
                     gl::TRIANGLES
                 }
                 PrimitiveType::TriangleStrip => {
-                    let count = vertex_buffer.get_count();
+                    let count = index_buffer.get_count();
                     assert!(count == 0 || count >= 3);
                     gl::TRIANGLE_STRIP
                 }
