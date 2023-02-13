@@ -34,8 +34,8 @@ use crate::{
     platform::Surface,
     renderer::{
         opengl::{OpenGLShader, OpenGLTexture, OpenGLVertexBuffer},
-        IndexBuffer, IndexBufferID, Pixels, PrimitiveType, Renderer, RendererDrawContext, Shader,
-        ShaderID, Texture, TextureID, VertexBuffer, VertexBufferElement, VertexBufferID,
+        CullFace, IndexBuffer, IndexBufferID, Pixels, PrimitiveType, Renderer, RendererDrawContext,
+        Shader, ShaderID, Texture, TextureID, VertexBuffer, VertexBufferElement, VertexBufferID,
     },
     scene::Camera,
     PhantomUnsend, PhantomUnsync,
@@ -183,6 +183,11 @@ impl OpenGLRenderer {
                 std::ptr::null(),
                 false as _,
             );
+        }
+
+        unsafe {
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
         }
 
         OpenGLRenderer {
@@ -372,6 +377,7 @@ impl Renderer for OpenGLRenderer {
         &'a mut self,
         camera: Camera<f32>,
         depth_testing: bool,
+        cull_face: CullFace,
     ) -> Box<dyn RendererDrawContext + 'a> {
         unsafe {
             if depth_testing {
@@ -380,6 +386,21 @@ impl Renderer for OpenGLRenderer {
                 gl::ClearDepth(0.0);
             } else {
                 gl::Disable(gl::DEPTH_TEST);
+            }
+            match cull_face {
+                CullFace::None => {
+                    gl::Disable(gl::CULL_FACE);
+                }
+                CullFace::Clockwise => {
+                    gl::Enable(gl::CULL_FACE);
+                    gl::CullFace(gl::BACK);
+                    gl::FrontFace(gl::CW);
+                }
+                CullFace::CounterClockwise => {
+                    gl::Enable(gl::CULL_FACE);
+                    gl::CullFace(gl::BACK);
+                    gl::FrontFace(gl::CCW);
+                }
             }
         }
         Box::new(OpenGLRendererDrawContext {

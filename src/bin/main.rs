@@ -12,6 +12,7 @@ fn main() {
         )
         .unwrap();
 
+    #[repr(C, packed)]
     struct Vertex {
         position: Vector3<f32>,
         normal: Vector3<f32>,
@@ -149,10 +150,10 @@ fn main() {
     );
 
     let index_buffer = renderer.create_index_buffer(&[
-        0, 1, 2, 0, 2, 3, // front face
-        6, 5, 4, 7, 6, 4, // back face
-        8, 9, 10, 8, 10, 11, // left face
-        14, 13, 12, 15, 14, 12, // right face
+        2, 1, 0, 3, 2, 0, // front face
+        4, 5, 6, 4, 6, 7, // back face
+        10, 9, 8, 11, 10, 8, // left face
+        12, 13, 14, 12, 14, 15, // right face
         16, 17, 18, 16, 18, 19, // top face
         22, 21, 20, 23, 22, 20, // bottom face
     ]);
@@ -278,7 +279,7 @@ fn main() {
 
         renderer.clear((0.2, 0.4, 0.8).into());
         {
-            let mut draw_context = renderer.drawing_context(camera, true);
+            let mut draw_context = renderer.drawing_context(camera, true, CullFace::Clockwise);
             draw_context.draw_indexed(
                 PrimitiveType::Triangle,
                 shader,

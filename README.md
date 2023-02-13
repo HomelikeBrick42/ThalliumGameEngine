@@ -38,7 +38,21 @@ void main() {
 ",
     ).unwrap();
 
-    let vertices: &[Vector2<f32>] = &[(0.0, 0.5).into(), (0.5, -0.5).into(), (-0.5, -0.5).into()];
+    #[repr(C, packed)]
+    struct Vertex {
+        position: Vector2<f32>,
+    }
+    let vertices: &[Vertex] = &[
+        Vertex {
+            position: (0.0, 0.5).into(),
+        },
+        Vertex {
+            position: (0.5, -0.5).into(),
+        },
+        Vertex {
+            position: (-0.5, -0.5).into(),
+        },
+    ];
     let vertex_buffer = renderer.create_vertex_buffer(
         &[VertexBufferElement::Float2],
         slice_to_bytes(vertices),
@@ -56,7 +70,7 @@ void main() {
 
         renderer.clear((0.2, 0.4, 0.8).into());
         {
-            let mut draw_context = renderer.drawing_context(Camera::default(), false);
+            let mut draw_context = renderer.drawing_context(Camera::default(), false, CullFace::Clockwise);
             draw_context.draw(PrimitiveType::Triangle, shader, vertex_buffer, None, Matrix4x4::default(), Vector3::zero());
         }
         renderer.present();

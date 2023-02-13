@@ -20,6 +20,12 @@ pub(crate) fn new_renderer(surface: Pin<Box<Surface>>, api: RendererAPI) -> Box<
     }
 }
 
+pub enum CullFace {
+    None,
+    Clockwise,
+    CounterClockwise,
+}
+
 pub trait Renderer {
     fn get_surface(&self) -> &Surface;
     fn get_surface_mut(&mut self) -> &mut Surface;
@@ -61,6 +67,7 @@ pub trait Renderer {
         &'a mut self,
         camera: Camera<f32>,
         depth_testing: bool,
+        cull_face: CullFace,
     ) -> Box<dyn RendererDrawContext + 'a>;
 }
 
